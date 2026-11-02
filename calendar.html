@@ -54,23 +54,9 @@
     .side-section { width: 160px; background: #f8f9fa; padding: 12px 10px; border-radius: 8px; border: 1px solid #e9ecef; flex-shrink: 0; box-sizing: border-box; }
     .side-header { margin-top: 0; font-size: 14px; color: #333; border-bottom: 2px solid #dc3545; padding-bottom: 8px; margin-bottom: 10px; font-weight: bold; text-align: center; }
     .side-list { list-style: none; padding: 0; margin: 0; }
-    
-    /* [수정됨] 패널 아이템 가로 배치 및 상하 여백 축소 */
-    .side-list li { 
-      display: flex; 
-      justify-content: space-between; 
-      align-items: flex-start; 
-      gap: 6px; 
-      margin-bottom: 4px; 
-      padding: 6px; 
-      border-bottom: 1px dashed #ddd; 
-      cursor: pointer; 
-      transition: background 0.2s; 
-      border-radius: 4px; 
-    }
+    .side-list li { display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; margin-bottom: 4px; padding: 6px; border-bottom: 1px dashed #ddd; cursor: pointer; transition: background 0.2s; border-radius: 4px; }
     .side-list li:hover { background: #e9ecef; }
     .side-list li:last-child { border-bottom: none; margin-bottom: 0; }
-    
     .side-date { color: #666; font-size: 11px; white-space: nowrap; padding-top: 1px; }
     .side-person { font-weight: bold; color: #000; font-size: 12px; text-align: right; line-height: 1.3; word-break: keep-all; }
 
@@ -174,6 +160,8 @@
     const REPO = "sol8923/sh23.github.io";
     const FILE_PATH = "schedule.json";
     const API_URL = `https://api.github.com/repos/${REPO}/contents/${FILE_PATH}`;
+    // [추가됨] 토큰 없이도 무제한 조회가 가능한 우회 경로 (Raw 통신)
+    const RAW_URL = `https://raw.githubusercontent.com/${REPO}/main/${FILE_PATH}`;
     
     let currentDate = new Date();
     let selectedDateStr = "";
@@ -210,23 +198,37 @@
       return `${year}-${month}-${day}`;
     }
 
+    // [보완] 토큰 유무에 따른 스마트 조회 시스템
     async function fetchSchedule() {
-      try {
-        const token = document.getElementById("github-token").value;
-        const headers = {};
-        if (token) headers["Authorization"] = `token ${token}`;
+      let isLoaded = false;
+      const token = document.getElementById("github-token").value;
+      
+      // 1. 토큰이 있으면 실시간 갱신되는 API 망으로 접속 시도
+      if (token) {
+        try {
+          const res = await fetch(API_URL + "?t=" + new Date().getTime(), { headers: { "Authorization": `token ${token}` } });
+          if (res.ok) {
+            const data = await res.json();
+            const parsed = JSON.parse(decodeURIComponent(escape(atob(data.content))));
+            if (Array.isArray(parsed)) appData.events = parsed;
+            else appData = parsed;
+            isLoaded = true;
+          }
+        } catch (e) { console.error("API 로드 실패", e); }
+      }
 
-        const res = await fetch(API_URL + "?t=" + new Date().getTime(), { headers });
-        
-        if (res.ok) {
-          const data = await res.json();
-          const parsed = JSON.parse(decodeURIComponent(escape(atob(data.content))));
-          if (Array.isArray(parsed)) appData.events = parsed;
-          else appData = parsed;
-        } else if (res.status === 403) {
-          console.warn("데이터 조회 제한에 걸렸으나 화면은 띄웁니다.");
-        }
-      } catch (e) { console.error("데이터 로드 실패", e); }
+      // 2. 토큰이 없거나 횟수 초과에 걸렸을 경우, 무제한 열람용 Raw 망으로 즉시 우회
+      if (!isLoaded) {
+        try {
+          const rawRes = await fetch(RAW_URL + "?t=" + new Date().getTime());
+          if (rawRes.ok) {
+            // Raw 망은 암호화(Base64) 없이 원본 텍스트를 바로 던져줍니다
+            const parsed = await rawRes.json();
+            if (Array.isArray(parsed)) appData.events = parsed;
+            else appData = parsed;
+          }
+        } catch (e) { console.error("Raw 로드 실패", e); }
+      }
       
       updateSelectOptions();
       renderCalendar();
@@ -325,14 +327,12 @@
         return evt.endDate >= startLimitStr && evt.startDate <= endLimitStr;
       });
 
-      // [수정됨] 동일 날짜 병합 로직 추가
       const groupedEvents = {};
       targetEvents.forEach(evt => {
         const key = `${evt.startDate}|${evt.endDate}`;
         if (!groupedEvents[key]) {
           groupedEvents[key] = { startDate: evt.startDate, endDate: evt.endDate, persons: [] };
         }
-        // 동일 날짜에 이름이 여러 번 들어가는 것을 방지 (중복 제거)
         if (!groupedEvents[key].persons.includes(evt.person)) {
           groupedEvents[key].persons.push(evt.person);
         }
@@ -350,9 +350,8 @@
       groupedArray.forEach(group => {
         const sDate = group.startDate.substring(5).replace("-", "."); 
         const eDate = group.endDate.substring(5).replace("-", ".");
-        // 당일치기면 10.15, 며칠 걸쳐있으면 10.15~10.17 형태로 표시 (공백 제거로 가로 폭 절약)
         const dateText = (group.startDate === group.endDate) ? sDate : `${sDate}~${eDate}`;
-        const personText = group.persons.join(", "); // 쉼표로 분리하여 나열
+        const personText = group.persons.join(", "); 
         
         html += `
           <li onclick="focusOnDate('${group.startDate}', true)" title="클릭하면 달력이 이동합니다">
@@ -480,7 +479,11 @@
       document.getElementById('settings-modal').style.display = 'flex';
     }
     
-    function closeSettingsModal() { document.getElementById('settings-modal').style.display = 'none'; }
+    // [보완] 설정창을 닫을 때 최신 데이터를 한 번 더 긁어옵니다
+    function closeSettingsModal() { 
+      document.getElementById('settings-modal').style.display = 'none'; 
+      fetchSchedule(); 
+    }
 
     async function deleteSchedule(eventId, btnEl) {
       if (!confirm("이 일정을 정말 삭제하시겠습니까?")) return;
