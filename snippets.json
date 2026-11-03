@@ -1,0 +1,10 @@
+[
+  {
+    "id": 1793684750205,
+    "title": "FTIR/TDMS Raw 데이터 쉼표 분리 매크로",
+    "category": "VBA",
+    "code": "Sub ParseSpectraData()\n    ' 쉼표(,)로 구분된 장비 Raw 데이터를 X축과 Y축으로 분리하는 매크로\n    Dim rng As Range, cell As Range\n    Dim arr As Variant\n\n    ' A열의 데이터 범위가 선택되었다고 가정\n    Set rng = Selection\n\n    Application.ScreenUpdating = False\n    For Each cell In rng\n        If InStr(cell.Value, \",\") > 0 Then\n            arr = Split(cell.Value, \",\")\n            cell.Value = Trim(arr(0)) ' X축 (예: Wavenumber / Temp)\n            cell.Offset(0, 1).Value = Trim(arr(1)) ' Y축 (예: Intensity)\n        End If\n    Next cell\n    Application.ScreenUpdating = True\n    \n    MsgBox \"데이터 파싱이 완료되었습니다.\", vbInformation\nEnd Sub",
+    "createdAt": 1793684750205,
+    "updatedAt": 1793684750205
+  }
+]
