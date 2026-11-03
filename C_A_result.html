@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>접촉각(Contact Angle) 웨이퍼 맵 분석기</title>
+  <style>
+    body { font-family: 'Malgun Gothic', sans-serif; margin: 0; padding: 20px; background-color: #f0f2f5; color: #333; }
+    
+    .header-area { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #ddd; }
+    .header-area h1 { margin: 0; font-size: 24px; color: #1a73e8; display: flex; align-items: center; gap: 10px; }
+    
+    .main-container { display: flex; gap: 20px; align-items: flex-start; }
+
+    /* 좌측: 데이터 입력부 */
+    .input-section { width: 320px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); flex-shrink: 0; display: flex; flex-direction: column; gap: 15px; }
+    .input-section h3 { margin: 0 0 5px 0; color: #333; font-size: 16px; }
+    .input-guide { font-size: 12px; color: #666; line-height: 1.4; background: #f8f9fa; padding: 10px; border-radius: 4px; border-left: 3px solid #1a73e8; }
+    
+    .textarea-wrap { display: flex; flex-direction: column; gap: 5px; }
+    #excel-data { width: 100%; height: 250px; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; font-family: monospace; font-size: 12px; white-space: pre; overflow: auto; resize: vertical; }
+    #excel-data:focus { outline: none; border-color: #1a73e8; }
+    
+    .btn-parse { background: #28a745; color: white; border: none; padding: 12px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 14px; transition: background 0.2s; }
+    .btn-parse:hover { background: #218838; }
+
+    /* 우측: 시각화 및 통계부 */
+    .viz-section { flex: 1; display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+    
+    /* 상단: 컨트롤 & 통계 요약 */
+    .dashboard-top { display: flex; gap: 20px; align-items: center; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+    
+    .sample-selector { display: flex; flex-direction: column; gap: 5px; border-right: 2px solid #eee; padding-right: 20px; }
+    .sample-selector label { font-size: 12px; font-weight: bold; color: #666; }
+    .sample-selector select { padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 15px; font-weight: bold; min-width: 150px; }
+    
+    .stats-container { display: flex; gap: 15px; flex: 1; }
+    .stat-card { flex: 1; background: #f8f9fa; border-radius: 6px; padding: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid #e1e4e8; }
+    .stat-label { font-size: 12px; font-weight: bold; color: #555; margin-bottom: 5px; }
+    .stat-value { font-size: 22px; font-weight: 900; color: #1a73e8; }
+
+    /* 웨이퍼 맵 렌더링 영역 */
+    .map-container { background: white; border-radius: 8px; padding: 30px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; justify-content: center; align-items: center; position: relative; }
+    
+    /* 범례 (Legend) */
+    .color-legend { position: absolute; right: 30px; top: 30px; display: flex; flex-direction: column; align-items: center; background: rgba(255,255,255,0.9); padding: 10px; border-radius: 6px; border: 1px solid #ddd; }
+    .legend-label { font-size: 11px; font-weight: bold; color: #666; margin: 4px 0; }
+    .legend-bar { width: 15px; height: 150px; background: linear-gradient(to top, blue, cyan, yellow, red); border-radius: 3px; border: 1px solid #ccc; }
+
+    /* 웨이퍼 SVG 캔버스 설정 (반응형 대응) */
+    svg.wafer { width: 100%; max-width: 600px; height: auto; display: block; overflow: visible; }
+    .wafer-bg { fill: #f1f3f5; stroke: #adb5bd; stroke-width: 2; }
+    .wafer-notch { fill: #adb5bd; }
+    
+    .data-point { stroke: #333; stroke-width: 0.5; cursor: crosshair; transition: stroke-width 0.1s, r 0.1s; }
+    .data-point:hover { stroke: black; stroke-width: 2; }
+    
+    /* 툴팁 */
+    #tooltip { position: absolute; background: rgba(0,0,0,0.8); color: white; padding: 6px 10px; border-radius: 4px; font-size: 12px; pointer-events: none; opacity: 0; transition: opacity 0.1s; z-index: 100; font-weight: bold; white-space: nowrap; }
+  </style>
+</head>
+<body>
+
+  <div class="header-area">
+    <h1>💧 접촉각(Contact Angle) 맵 분석기</h1>
+  </div>
+
+  <div class="main-container">
+    <!-- 좌측 입력부 -->
+    <div class="input-section">
+      <h3>📊 엑셀 데이터 입력</h3>
+      <div class="input-guide">
+        <b>[데이터 포맷 가이드]</b><br>
+        • 열(Column) 순서: <b>X좌표, Y좌표, S1, S2, S3...</b><br>
+        • 행(Row) 순서: 측정 지점(Point) 1, 2, 3...<br>
+        • 엑셀 표를 그대로 복사(Ctrl+C)해서 아래에 붙여넣으세요. 첫 줄이 문자(제목)이면 자동 패스합니다.
+      </div>
+      <div class="textarea-wrap">
+        <textarea id="excel-data" placeholder="150   150   55.2   54.1&#10;150   250   58.4   56.7&#10;..."></textarea>
+      </div>
+      <button class="btn-parse" onclick="processData()">데이터 매핑하기 🚀</button>
+    </div>
+
+    <!-- 우측 시각화부 -->
+    <div class="viz-section" id="viz-section" style="display: none;">
+      
+      <!-- 통계 및 샘플 선택기 -->
+      <div class="dashboard-top">
+        <div class="sample-selector">
+          <label>분석 샘플 선택</label>
+          <select id="sample-select" onchange="renderWaferMap()"></select>
+        </div>
+        <div class="stats-container">
+          <div class="stat-card">
+            <span class="stat-label">평균 (AVE)</span>
+            <span class="stat-value" id="stat-ave">-</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">표준편차 (SD)</span>
+            <span class="stat-value" id="stat-sd">-</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">상대표준편차 (%RSD)</span>
+            <span class="stat-value" id="stat-rsd">-</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 웨이퍼 그래픽 영역 -->
+      <div class="map-container">
+        <div id="tooltip"></div>
+        <div class="color-legend">
+          <span class="legend-label" id="legend-max">Max</span>
+          <div class="legend-bar"></div>
+          <span class="legend-label" id="legend-min">Min</span>
+        </div>
+        
+        <!-- ViewBox 0 0 300 300으로 300mm 웨이퍼 실제 좌표와 1:1 매칭 -->
+        <svg class="wafer" viewBox="-10 -10 320 320" id="wafer-svg">
+          <!-- 웨이퍼 본체 -->
+          <circle cx="150" cy="150" r="150" class="wafer-bg"></circle>
+          <!-- 웨이퍼 노치 (아래쪽 270도 위치 가정) -->
+          <path d="M 145 300 L 155 300 L 150 295 Z" class="wafer-notch"></path>
+          
+          <!-- 데이터 포인트들이 그려질 그룹 -->
+          <g id="data-points-group"></g>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let parsedData = []; // [{ x, y, values: [s1, s2, s3...] }, ...]
+    let sampleNames = []; 
+
+    function processData() {
+      const rawText = document.getElementById("excel-data").value.trim();
+      if (!rawText) return alert("데이터를 입력해 주세요.");
+
+      const lines = rawText.split('\n');
+      parsedData = [];
+      sampleNames = [];
+      let startRow = 0;
+
+      // 1. 헤더 유무 판별 및 첫 번째 줄 파싱
+      const firstLineTokens = lines[0].split('\t');
+      // 엑셀에서 복사하면 주로 탭(\t)으로 구분됨. 콤마나 띄어쓰기도 호환되도록 처리
+      const parseTokens = (line) => line.split(/\t/).map(t => t.trim()).filter(t => t !== "");
+      
+      const firstRow = parseTokens(lines[0]);
+      if (firstRow.length < 3) return alert("데이터는 최소 3열(X, Y, Sample1) 이상이어야 합니다.");
+
+      // 첫 줄의 첫 데이터가 숫자가 아니면 헤더(제목)로 간주
+      if (isNaN(parseFloat(firstRow[0]))) {
+        startRow = 1;
+        // 샘플 이름 추출 (1, 2번째 열은 X, Y이므로 그 이후부터)
+        for (let i = 2; i < firstRow.length; i++) {
+          sampleNames.push(firstRow[i] || `Sample ${i - 1}`);
+        }
+      } else {
+        // 헤더가 없으면 임의로 이름 생성
+        for (let i = 2; i < firstRow.length; i++) {
+          sampleNames.push(`Sample ${i - 1}`);
+        }
+      }
+
+      // 2. 데이터 행 파싱
+      for (let i = startRow; i < lines.length; i++) {
+        const tokens = parseTokens(lines[i]);
+        if (tokens.length < 3) continue; // 빈 줄이나 잘못된 줄 무시
+
+        const x = parseFloat(tokens[0]);
+        const y = parseFloat(tokens[1]);
+        
+        if (isNaN(x) || isNaN(y)) continue;
+
+        const values = [];
+        for (let j = 2; j < tokens.length; j++) {
+          const val = parseFloat(tokens[j]);
+          values.push(isNaN(val) ? null : val);
+        }
+        
+        parsedData.push({ x, y, values });
+      }
+
+      if (parsedData.length === 0) return alert("유효한 숫자 데이터가 없습니다. 형식을 확인해 주세요.");
+
+      // 3. UI 업데이트
+      const selectEl = document.getElementById("sample-select");
+      selectEl.innerHTML = "";
+      sampleNames.forEach((name, idx) => {
+        const option = document.createElement("option");
+        option.value = idx;
+        option.innerText = name;
+        selectEl.appendChild(option);
+      });
+
+      document.getElementById("viz-section").style.display = "flex";
+      renderWaferMap();
+    }
+
+    // 값에 따른 색상 추출 (파랑 -> 빨강 히트맵)
+    function getColorForValue(value, min, max) {
+      if (value === null || isNaN(value)) return "transparent";
+      if (max === min) return "hsl(120, 100%, 50%)"; // 모든 값이 같으면 초록색
+      
+      const ratio = (value - min) / (max - min); 
+      // HSL: 240(파랑) ~ 0(빨강)
+      const hue = (1 - ratio) * 240; 
+      return `hsl(${hue}, 100%, 50%)`;
+    }
+
+    function renderWaferMap() {
+      const sampleIdx = parseInt(document.getElementById("sample-select").value);
+      
+      // 1. 해당 샘플의 통계 계산을 위한 유효 배열 추출
+      const validValues = [];
+      parsedData.forEach(pt => {
+        const val = pt.values[sampleIdx];
+        if (val !== null && val !== undefined) validValues.push(val);
+      });
+
+      if (validValues.length === 0) {
+        document.getElementById("stat-ave").innerText = "-";
+        document.getElementById("stat-sd").innerText = "-";
+        document.getElementById("stat-rsd").innerText = "-";
+        document.getElementById("data-points-group").innerHTML = "";
+        return;
+      }
+
+      // 통계 연산
+      const sum = validValues.reduce((a, b) => a + b, 0);
+      const ave = sum / validValues.length;
+      
+      let sd = 0;
+      if (validValues.length > 1) {
+        const variance = validValues.reduce((a, b) => a + Math.pow(b - ave, 2), 0) / (validValues.length - 1);
+        sd = Math.sqrt(variance);
+      }
+      
+      const rsd = ave !== 0 ? (sd / ave) * 100 : 0;
+
+      document.getElementById("stat-ave").innerText = ave.toFixed(2);
+      document.getElementById("stat-sd").innerText = sd.toFixed(2);
+      document.getElementById("stat-rsd").innerText = rsd.toFixed(2) + "%";
+
+      // 색상 렌더링을 위한 Min / Max 추출
+      const maxVal = Math.max(...validValues);
+      const minVal = Math.min(...validValues);
+      
+      document.getElementById("legend-max").innerText = maxVal.toFixed(1);
+      document.getElementById("legend-min").innerText = minVal.toFixed(1);
+
+      // 2. SVG 렌더링
+      const group = document.getElementById("data-points-group");
+      group.innerHTML = "";
+      
+      const tooltip = document.getElementById("tooltip");
+      const svgArea = document.getElementById("wafer-svg");
+
+      parsedData.forEach(pt => {
+        const val = pt.values[sampleIdx];
+        if (val === null || val === undefined) return;
+
+        const color = getColorForValue(val, minVal, maxVal);
+        
+        // 중요: 통상적인 장비 좌표계(0,0이 좌측 하단)를 SVG 좌표계(0,0이 좌측 상단)로 변환
+        // 만약 사용자 데이터의 0,0이 좌측 상단이라면 `const svgY = pt.y;` 로 변경해야 합니다.
+        // 여기서는 Y축이 아래에서 위로 올라가는 일반적인 수학 좌표계 기준으로 가정하여 변환했습니다.
+        const svgY = 300 - pt.y; 
+
+        // 동그라미 생성
+        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        circle.setAttribute("cx", pt.x);
+        circle.setAttribute("cy", svgY);
+        circle.setAttribute("r", 6); // 점 크기
+        circle.setAttribute("fill", color);
+        circle.setAttribute("class", "data-point");
+
+        // 툴팁 이벤트
+        circle.addEventListener("mouseover", (e) => {
+          tooltip.innerHTML = `X: ${pt.x}, Y: ${pt.y}<br>CA: ${val.toFixed(2)}`;
+          tooltip.style.opacity = 1;
+        });
+        
+        circle.addEventListener("mousemove", (e) => {
+          // 브라우저 뷰포트 기준 마우스 좌표를 따라가게 설정
+          tooltip.style.left = (e.pageX + 15) + "px";
+          tooltip.style.top = (e.pageY - 15) + "px";
+        });
+        
+        circle.addEventListener("mouseout", () => {
+          tooltip.style.opacity = 0;
+        });
+
+        group.appendChild(circle);
+      });
+    }
+  </script>
+</body>
+</html>
