@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Contact Angle Wafer Analytics</title>
+  <!-- PPT 생성을 위한 순수 자바스크립트 라이브러리 (사내에서 차단 시 다운로드 후 로컬 경로로 변경 가능) -->
+  <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+  
   <style>
     /* 프로페셔널 대시보드 테마 CSS */
     :root {
@@ -18,34 +21,29 @@
 
     body { font-family: 'Segoe UI', 'Malgun Gothic', sans-serif; margin: 0; padding: 0; background-color: var(--bg-color); color: var(--text-main); font-size: 13px; }
     
-    /* 헤더 */
     .topbar { background: var(--panel-bg); border-bottom: 1px solid var(--border-color); padding: 15px 25px; display: flex; align-items: center; justify-content: space-between; }
     .topbar h1 { margin: 0; font-size: 18px; color: var(--text-main); letter-spacing: -0.5px; }
     
-    /* 전체 레이아웃 (좌측 컨트롤 / 우측 탭 콘텐츠) */
+    .btn-exec { background: var(--primary); color: white; border: none; padding: 10px 15px; border-radius: 4px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+    .btn-exec:hover { background: var(--primary-dark); }
+    
     .dashboard-layout { display: flex; gap: 20px; padding: 20px; align-items: flex-start; max-width: 1500px; margin: 0 auto; }
 
-    /* 좌측: 데이터 및 컨트롤 패널 (280px) */
     .left-col { width: 280px; flex-shrink: 0; display: flex; flex-direction: column; gap: 15px; }
     .panel { background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 6px; padding: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
     .panel-title { margin: 0 0 12px 0; font-size: 14px; color: var(--text-main); border-bottom: 1px solid var(--border-color); padding-bottom: 8px; font-weight: 700; }
 
     .input-wrap textarea { width: 100%; height: 200px; padding: 10px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 4px; font-family: 'Consolas', monospace; font-size: 11px; white-space: pre; overflow: auto; resize: vertical; background: #f9fafb; color: #374151; }
     .input-wrap textarea:focus { outline: none; border-color: var(--primary); background: #fff; }
-    .btn-exec { width: 100%; background: var(--primary); color: white; border: none; padding: 10px; border-radius: 4px; font-weight: 600; cursor: pointer; margin-top: 10px; transition: background 0.2s; }
-    .btn-exec:hover { background: var(--primary-dark); }
 
-    /* 컨트롤 그룹 (라벨 줄바꿈 방지 적용) */
     .control-group { display: flex; flex-direction: column; gap: 10px; }
     .control-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
     .control-row label { font-size: 12px; color: var(--text-muted); font-weight: 600; white-space: nowrap; word-break: keep-all; }
     .control-row input[type="number"], .control-row select { width: 110px; padding: 5px 8px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 12px; font-family: inherit; }
     .control-row input[type="range"] { width: 100px; }
 
-    /* 우측: 메인 뷰 (탭 영역) */
     .right-workspace { flex: 1; min-width: 0; display: flex; flex-direction: column; }
     
-    /* 탭 내비게이션 */
     .tab-nav { display: flex; gap: 5px; margin-bottom: 15px; border-bottom: 2px solid var(--primary); }
     .tab-btn { padding: 10px 25px; border: 1px solid var(--border-color); border-bottom: none; border-radius: 6px 6px 0 0; background: #e5e7eb; cursor: pointer; font-weight: 600; font-size: 14px; color: var(--text-muted); transition: all 0.2s; }
     .tab-btn:hover { background: #d1d5db; }
@@ -55,9 +53,8 @@
     .tab-content.active { display: flex; gap: 20px; animation: fadeIn 0.3s ease; }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-    /* ========== [탭 1] 맵 뷰 (Map View) ========== */
+    /* Map View */
     .map-center { flex: 1; display: flex; flex-direction: column; gap: 15px; min-width: 450px; }
-    
     .stats-bar { display: flex; gap: 15px; }
     .stat-box { flex: 1; background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 4px; padding: 12px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
     .stat-box .label { display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 4px; font-weight: 600; }
@@ -67,50 +64,53 @@
     .map-sample-title { position: absolute; top: 20px; left: 25px; font-size: 20px; font-weight: 900; color: var(--text-main); background: rgba(255,255,255,0.8); padding: 5px 10px; border-radius: 4px; }
     
     svg.wafer-svg { width: 100%; max-width: 550px; height: auto; display: block; overflow: visible; }
-    .wafer-bg { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1.5; }
-    .wafer-notch { fill: #cbd5e1; }
-    .data-point { stroke: #334155; stroke-width: 0.5; transition: stroke-width 0.1s; cursor: crosshair; }
-    .data-point:hover { stroke: #0f172a; stroke-width: 2; }
-    
-    /* 값 표시 텍스트 스타일 (크기는 자바스크립트에서 제어) */
     .point-val-text { font-weight: 800; fill: #0f172a; text-anchor: middle; paint-order: stroke; stroke: rgba(255,255,255,0.9); stroke-width: 3px; pointer-events: none; }
 
-    /* 우측 보조 패널 */
-    .map-right { width: 260px; flex-shrink: 0; display: flex; flex-direction: column; gap: 15px; }
-    
+    /* Map Right Panel */
+    .map-right { width: 280px; flex-shrink: 0; display: flex; flex-direction: column; gap: 15px; }
     .legend-container { display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid var(--border-color); border-radius: 4px; padding: 15px; }
     .legend-bar { flex: 1; height: 12px; border-radius: 2px; border: 1px solid #cbd5e1; margin: 0 10px; background: linear-gradient(to right, hsl(210, 80%, 90%), hsl(210, 80%, 30%)); }
     .legend-val { font-size: 11px; font-weight: bold; color: var(--text-muted); }
 
-    .ref-map-container { display: flex; justify-content: center; align-items: center; padding: 20px 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; }
-    svg.ref-wafer { width: 100%; max-width: 220px; height: auto; display: block; overflow: visible; }
-    .ref-wafer-bg { fill: #ffffff; stroke: #cbd5e1; stroke-width: 1; }
-    .ref-point { fill: #cbd5e1; stroke: #64748b; stroke-width: 1; }
-    .ref-text { font-size: 14px; font-weight: 900; fill: #0f172a; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+    .ref-map-container { display: flex; justify-content: center; align-items: center; padding: 30px 20px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; }
+    svg.ref-wafer { width: 100%; max-width: 250px; height: auto; display: block; overflow: visible; }
 
     #tooltip { position: absolute; background: rgba(15, 23, 42, 0.9); color: white; padding: 6px 10px; border-radius: 4px; font-size: 11px; pointer-events: none; opacity: 0; transition: opacity 0.1s; z-index: 100; font-family: monospace; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
 
-    /* ========== [탭 2] 데이터 표 (Table View) ========== */
+    /* Data Table View */
     .table-top-bar { display: flex; justify-content: flex-end; padding-bottom: 10px; }
     .unit-label { font-size: 12px; font-weight: bold; color: var(--text-muted); background: #f8fafc; padding: 4px 10px; border-radius: 4px; border: 1px solid var(--border-color); }
     
     .table-container { width: 100%; background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); overflow: auto; max-height: 750px; }
     .data-table { width: 100%; border-collapse: collapse; text-align: center; font-size: 13px; }
-    .data-table th, .data-table td { border: 1px solid var(--border-color); padding: 10px 15px; text-align: center; } /* 가운데 정렬 */
+    .data-table th, .data-table td { border: 1px solid var(--border-color); padding: 10px 15px; text-align: center; } 
     .data-table th { background: #f1f5f9; color: var(--text-main); font-weight: bold; position: sticky; top: 0; z-index: 1; }
     .data-table tbody tr:hover { background: #f8fafc; }
     
-    /* 테이블 통계 푸터 (전문성 강화 - 무채색 톤) */
     .data-table tfoot th { font-weight: bold; color: var(--text-main); position: sticky; bottom: 0; border-top: 2px solid #cbd5e1; }
     .data-table tfoot tr.stat-row-ave th { background: #f1f5f9; color: #1e293b; }
     .data-table tfoot tr.stat-row-sd th { background: #f8fafc; color: #334155; }
     .data-table tfoot tr.stat-row-rsd th { background: #ffffff; color: #475569; }
+
+    /* 모달 (PPT 설정창) */
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(2px); }
+    .modal-content { background: white; padding: 25px; border-radius: 8px; width: 340px; display: flex; flex-direction: column; gap: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+    .modal-content h3 { margin: 0 0 5px 0; font-size: 18px; color: #1f2937; }
+    .modal-content label { font-weight: 700; font-size: 12px; color: #4b5563; margin-bottom: -5px; }
+    .modal-content input { width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #d1d5db; border-radius: 4px; font-family: inherit; font-size: 13px; }
+    .modal-content input:focus { outline: none; border-color: var(--primary); }
+    .btn-group { display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; }
+    .btn-modal { padding: 8px 15px; border-radius: 4px; border: none; font-weight: bold; cursor: pointer; }
+    .btn-cancel { background: #e5e7eb; color: #4b5563; }
+    .btn-save { background: var(--primary); color: white; }
   </style>
 </head>
 <body>
 
   <div class="topbar">
     <h1>💧 Contact Angle Wafer Analytics</h1>
+    <!-- PPT 리포트 다운로드 버튼 추가 -->
+    <button class="btn-exec" id="btn-ppt" style="display: none;" onclick="openPptModal()">📥 PPT 리포트 다운로드</button>
   </div>
 
   <div class="dashboard-layout">
@@ -121,7 +121,7 @@
         <h2 class="panel-title">Raw Data Input</h2>
         <div class="input-wrap">
           <textarea id="excel-data" placeholder="X    Y    Sample1    Sample2&#10;150  150  55.2       54.1&#10;150  250  58.4       56.7&#10;..."></textarea>
-          <button class="btn-exec" onclick="processData()">Execute Mapping</button>
+          <button class="btn-exec" style="width:100%; margin-top:10px;" onclick="processData()">Execute Mapping</button>
         </div>
       </div>
 
@@ -149,15 +149,14 @@
             <label>Min Value</label>
             <input type="number" id="manual-min" step="0.1" onchange="renderWaferMap()">
           </div>
-          <button class="btn-exec" style="background: #64748b; padding: 6px; font-size: 11px;" onclick="resetMinMax()">Auto Range 리셋</button>
+          <button class="btn-exec" style="background: #64748b; padding: 6px; font-size: 11px; width:100%;" onclick="resetMinMax()">Auto Range 리셋</button>
         </div>
       </div>
     </div>
 
-    <!-- 2. 우측 워크스페이스 (탭 영역) -->
+    <!-- 2. 우측 워크스페이스 -->
     <div class="right-workspace" id="right-workspace" style="visibility: hidden;">
       
-      <!-- 탭 내비게이션 -->
       <div class="tab-nav">
         <button class="tab-btn active" id="btn-tab-map" onclick="switchTab('tab-map', this)">🗺️ Map View</button>
         <button class="tab-btn" id="btn-tab-table" onclick="switchTab('tab-table', this)">📊 Data Table</button>
@@ -176,15 +175,16 @@
           <div class="main-map-container">
             <div class="map-sample-title" id="map-sample-title">Sample Name</div>
             <div id="tooltip"></div>
-            <svg class="wafer-svg" viewBox="-10 -10 320 320" id="wafer-svg">
-              <circle cx="150" cy="150" r="150" class="wafer-bg"></circle>
-              <path d="M 145 300 L 155 300 L 150 295 Z" class="wafer-notch"></path>
+            <!-- Canvas 변환을 위해 배경색 등을 인라인 속성으로 부여 -->
+            <svg class="wafer-svg" viewBox="-10 -10 320 320" id="wafer-svg" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="150" cy="150" r="150" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"></circle>
+              <path d="M 145 300 L 155 300 L 150 295 Z" fill="#cbd5e1"></path>
               <g id="data-points-group"></g>
             </svg>
           </div>
         </div>
 
-        <!-- 맵 우측 보조 (레퍼런스 & 범례) -->
+        <!-- 맵 우측 보조 -->
         <div class="map-right">
           <div class="panel">
             <h2 class="panel-title">Color Range (Legend)</h2>
@@ -198,9 +198,14 @@
           <div class="panel">
             <h2 class="panel-title">측정 위치 참고도</h2>
             <div class="ref-map-container">
-              <svg class="ref-wafer" viewBox="-10 -10 320 320">
-                <circle cx="150" cy="150" r="150" class="ref-wafer-bg"></circle>
-                <path d="M 145 300 L 155 300 L 150 295 Z" class="wafer-notch"></path>
+              <!-- 단위 X(mm), Y(mm) 표시를 위해 뷰박스 확장 -->
+              <svg class="ref-wafer" viewBox="-40 -40 380 380" id="ref-wafer" xmlns="http://www.w3.org/2000/svg">
+                <!-- X, Y 축 단위 라벨 -->
+                <text x="150" y="340" font-size="16" font-weight="bold" fill="#64748b" text-anchor="middle">X (mm)</text>
+                <text x="-25" y="150" font-size="16" font-weight="bold" fill="#64748b" text-anchor="middle" transform="rotate(-90, -25, 150)">Y (mm)</text>
+                
+                <circle cx="150" cy="150" r="150" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"></circle>
+                <path d="M 145 300 L 155 300 L 150 295 Z" fill="#cbd5e1"></path>
                 <g id="ref-points-group"></g>
               </svg>
             </div>
@@ -208,16 +213,31 @@
         </div>
       </div>
 
-      <!-- [탭 2] Data Table (flex-direction 적용) -->
+      <!-- [탭 2] Data Table -->
       <div id="tab-table" class="tab-content" style="display: none; flex-direction: column;">
         <div class="table-top-bar">
           <span class="unit-label">단위: 각도 (°)</span>
         </div>
-        <div class="table-container" id="table-container">
-          <!-- 스크립트에서 동적 생성 -->
-        </div>
+        <div class="table-container" id="table-container"></div>
       </div>
 
+    </div>
+  </div>
+
+  <!-- PPT 모달 -->
+  <div id="ppt-modal" class="modal">
+    <div class="modal-content">
+      <h3>📥 PPT 리포트 자동 생성</h3>
+      <label>분석 제목</label>
+      <input type="text" id="ppt-title" placeholder="예: 11월 OOO 설비 웨이퍼 접촉각 분석">
+      
+      <label>측정 일자</label>
+      <input type="date" id="ppt-date">
+      
+      <div class="btn-group">
+        <button class="btn-modal btn-cancel" onclick="closePptModal()">취소</button>
+        <button class="btn-modal btn-save" id="btn-ppt-generate" onclick="generatePPT()">문서 생성 및 다운로드</button>
+      </div>
     </div>
   </div>
 
@@ -227,11 +247,18 @@
     let currentAutoMin = 0;
     let currentAutoMax = 0;
 
-    // 탭 전환 함수
+    // 모달 제어
+    function openPptModal() {
+      document.getElementById("ppt-modal").style.display = "flex";
+      document.getElementById("ppt-date").valueAsDate = new Date(); // 오늘 날짜 기본 세팅
+    }
+    function closePptModal() {
+      document.getElementById("ppt-modal").style.display = "none";
+    }
+
     function switchTab(tabId, btnEl) {
       document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      
       document.getElementById(tabId).style.display = (tabId === 'tab-map') ? 'flex' : 'flex';
       btnEl.classList.add('active');
     }
@@ -249,7 +276,6 @@
       const firstRow = parseTokens(lines[0]);
       if (firstRow.length < 3) return alert("데이터는 최소 3열(X, Y, Sample1) 이상이어야 합니다.");
 
-      // 헤더 식별
       if (isNaN(parseFloat(firstRow[0]))) {
         startRow = 1;
         for (let i = 2; i < firstRow.length; i++) sampleNames.push(firstRow[i] || `Sample ${i - 1}`);
@@ -257,11 +283,9 @@
         for (let i = 2; i < firstRow.length; i++) sampleNames.push(`Sample ${i - 1}`);
       }
 
-      // 데이터 파싱
       for (let i = startRow; i < lines.length; i++) {
         const tokens = parseTokens(lines[i]);
         if (tokens.length < 3) continue; 
-
         const x = parseFloat(tokens[0]);
         const y = parseFloat(tokens[1]);
         if (isNaN(x) || isNaN(y)) continue;
@@ -276,7 +300,6 @@
 
       if (parsedData.length === 0) return alert("유효한 숫자 데이터가 없습니다.");
 
-      // 샘플 셀렉터 갱신
       const selectEl = document.getElementById("sample-select");
       selectEl.innerHTML = "";
       sampleNames.forEach((name, idx) => {
@@ -286,16 +309,15 @@
         selectEl.appendChild(option);
       });
 
-      // 패널 활성화
       document.getElementById("controls-panel").style.display = "flex";
       document.getElementById("right-workspace").style.visibility = "visible";
+      document.getElementById("btn-ppt").style.display = "block";
       
       renderReferenceMap();
       renderDataTable();
       resetMinMax(); 
     }
 
-    // 통계 연산 헬퍼 (소수점 1자리 통일)
     function calcStats(validArray) {
       if (validArray.length === 0) return { ave: "-", sd: "-", rsd: "-" };
       const sum = validArray.reduce((a, b) => a + b, 0);
@@ -309,7 +331,6 @@
       return { ave: ave.toFixed(1), sd: sd.toFixed(1), rsd: rsd.toFixed(1) };
     }
 
-    // 통계 및 자동 범위 리셋
     function resetMinMax() {
       const sampleIdx = parseInt(document.getElementById("sample-select").value);
       const validValues = parsedData.map(pt => pt.values[sampleIdx]).filter(v => v !== null && v !== undefined);
@@ -323,7 +344,6 @@
       
       document.getElementById("manual-max").value = currentAutoMax.toFixed(1);
       document.getElementById("manual-min").value = currentAutoMin.toFixed(1);
-      
       renderWaferMap();
     }
 
@@ -331,7 +351,6 @@
       if (value === null || isNaN(value)) return "transparent";
       if (value < min) value = min;
       if (value > max) value = max;
-      
       const ratio = (max === min) ? 0.5 : (value - min) / (max - min); 
       const lightness = 90 - (ratio * 60); 
       return `hsl(210, 80%, ${lightness}%)`;
@@ -340,22 +359,26 @@
     function renderReferenceMap() {
       const group = document.getElementById("ref-points-group");
       group.innerHTML = "";
-
       parsedData.forEach((pt, idx) => {
         const svgY = 300 - pt.y; 
-        
         const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
         circle.setAttribute("cx", pt.x);
         circle.setAttribute("cy", svgY);
         circle.setAttribute("r", 12);
-        circle.setAttribute("class", "ref-point");
+        circle.setAttribute("fill", "#cbd5e1");
+        circle.setAttribute("stroke", "#64748b");
+        circle.setAttribute("stroke-width", "1");
         
         const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
         text.setAttribute("cx", pt.x);
         text.setAttribute("cy", svgY);
         text.setAttribute("x", pt.x);
         text.setAttribute("y", svgY);
-        text.setAttribute("class", "ref-text");
+        text.setAttribute("font-size", "14");
+        text.setAttribute("font-weight", "900");
+        text.setAttribute("fill", "#0f172a");
+        text.setAttribute("text-anchor", "middle");
+        text.setAttribute("dominant-baseline", "central");
         text.textContent = idx + 1;
 
         group.appendChild(circle);
@@ -363,24 +386,20 @@
       });
     }
 
-    // 메인 웨이퍼 맵 시각화
     function renderWaferMap() {
       const sampleIdx = parseInt(document.getElementById("sample-select").value);
       const pointSize = document.getElementById("point-size").value;
       const textSize = document.getElementById("text-size").value;
       
       document.getElementById("map-sample-title").innerText = sampleNames[sampleIdx];
-
       const maxVal = parseFloat(document.getElementById("manual-max").value) || currentAutoMax;
       const minVal = parseFloat(document.getElementById("manual-min").value) || currentAutoMin;
 
       const validValues = parsedData.map(pt => pt.values[sampleIdx]).filter(v => v !== null && v !== undefined);
       const stats = calcStats(validValues);
-
       document.getElementById("stat-ave").innerText = stats.ave;
       document.getElementById("stat-sd").innerText = stats.sd;
       document.getElementById("stat-rsd").innerText = stats.rsd !== "-" ? stats.rsd + "%" : "-";
-
       document.getElementById("legend-max").innerText = maxVal.toFixed(1);
       document.getElementById("legend-min").innerText = minVal.toFixed(1);
 
@@ -395,21 +414,20 @@
         const color = getColorForValue(val, minVal, maxVal);
         const svgY = 300 - pt.y; 
 
-        // 점(원)
         const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
         circle.setAttribute("cx", pt.x);
         circle.setAttribute("cy", svgY);
         circle.setAttribute("r", pointSize);
         circle.setAttribute("fill", color);
-        circle.setAttribute("class", "data-point");
+        circle.setAttribute("stroke", "#334155");
+        circle.setAttribute("stroke-width", "0.5");
 
-        // 텍스트(실제 값) - 동적으로 글자 크기와 높이 위치 조절
         const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
         text.setAttribute("x", pt.x);
         text.setAttribute("y", svgY - parseInt(pointSize) - (parseInt(textSize) / 2) + 2); 
         text.setAttribute("class", "point-val-text");
         text.setAttribute("style", `font-size: ${textSize}px;`);
-        text.textContent = val.toFixed(1); // 1자리 고정
+        text.textContent = val.toFixed(1);
 
         circle.addEventListener("mouseover", (e) => {
           tooltip.innerHTML = `No.${idx + 1} | X:${pt.x}, Y:${pt.y}<br>Value: <span style="color:#60a5fa">${val.toFixed(1)}</span>`;
@@ -428,19 +446,13 @@
       });
     }
 
-    // 데이터 테이블 렌더링 (모두 가운데 정렬, 소수점 1자리)
     function renderDataTable() {
       const container = document.getElementById("table-container");
-      
       let html = `<table class="data-table"><thead><tr>`;
       html += `<th>Point No.</th><th>X 좌표</th><th>Y 좌표</th>`;
-      
-      sampleNames.forEach(name => {
-        html += `<th>${name}</th>`;
-      });
+      sampleNames.forEach(name => { html += `<th>${name}</th>`; });
       html += `</tr></thead><tbody>`;
       
-      // 행 데이터 생성
       parsedData.forEach((pt, idx) => {
         html += `<tr><td><b>${idx + 1}</b></td><td>${pt.x}</td><td>${pt.y}</td>`;
         pt.values.forEach(val => {
@@ -450,7 +462,6 @@
       });
       html += `</tbody><tfoot>`;
 
-      // 통계 푸터 생성
       let aveRow = `<tr class="stat-row-ave"><th colspan="3">Average (AVE)</th>`;
       let sdRow = `<tr class="stat-row-sd"><th colspan="3">Standard Deviation (SD)</th>`;
       let rsdRow = `<tr class="stat-row-rsd"><th colspan="3">% RSD</th>`;
@@ -458,18 +469,136 @@
       sampleNames.forEach((_, sIdx) => {
         const validValues = parsedData.map(pt => pt.values[sIdx]).filter(v => v !== null && v !== undefined);
         const stats = calcStats(validValues);
-        
         aveRow += `<th>${stats.ave}</th>`;
         sdRow += `<th>${stats.sd}</th>`;
         rsdRow += `<th>${stats.rsd !== "-" ? stats.rsd + "%" : "-"}</th>`;
       });
 
-      aveRow += `</tr>`;
-      sdRow += `</tr>`;
-      rsdRow += `</tr>`;
-      
-      html += aveRow + sdRow + rsdRow + `</tfoot></table>`;
+      html += aveRow + `</tr>` + sdRow + `</tr>` + rsdRow + `</tr></tfoot></table>`;
       container.innerHTML = html;
+    }
+
+    // ==========================================
+    // PPT Export 핵심 로직
+    // ==========================================
+
+    // 1. SVG를 Base64 PNG로 변환하는 함수
+    function svgToBase64(svgElement) {
+      return new Promise((resolve, reject) => {
+        const svgClone = svgElement.cloneNode(true);
+        const svgData = new XMLSerializer().serializeToString(svgClone);
+        const canvas = document.createElement("canvas");
+        const viewBox = svgElement.viewBox.baseVal;
+        canvas.width = viewBox.width || 400;
+        canvas.height = viewBox.height || 400;
+        
+        const ctx = canvas.getContext("2d");
+        ctx.fillStyle = "#ffffff"; // 배경 흰색
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        const img = new Image();
+        img.onload = () => {
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          resolve(canvas.toDataURL("image/png"));
+        };
+        img.onerror = reject;
+        img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData)));
+      });
+    }
+
+    // 2. PPTX 파일 생성 함수
+    async function generatePPT() {
+      const btn = document.getElementById("btn-ppt-generate");
+      btn.innerText = "생성 중...";
+      btn.disabled = true;
+
+      try {
+        const title = document.getElementById("ppt-title").value || "접촉각 분석 리포트";
+        const date = document.getElementById("ppt-date").value || new Date().toISOString().split('T')[0];
+        
+        // PptxGenJS 인스턴스 생성
+        let pres = new PptxGenJS();
+        pres.layout = "LAYOUT_16x9";
+        
+        // [1페이지] 표지 (Summary)
+        let slide1 = pres.addSlide();
+        slide1.addText(title, { x: 1, y: 2.5, w: "80%", h: 1.5, fontSize: 36, bold: true, color: "1a73e8", align: "center" });
+        slide1.addText(`${date}\n인프라품질분석팀`, { x: 1, y: 4.5, w: "80%", h: 1.5, fontSize: 18, color: "555555", align: "center", lineSpacing: 25 });
+        
+        // 브라우저 뷰의 SVG를 이미지로 추출
+        const mainSvg = document.getElementById("wafer-svg");
+        const refSvg = document.getElementById("ref-wafer");
+        const mainImgB64 = await svgToBase64(mainSvg);
+        const refImgB64 = await svgToBase64(refSvg);
+        
+        // [2페이지] 분석 결과 (Analysis result)
+        let slide2 = pres.addSlide();
+        slide2.addText("Analysis result", { x: 0.5, y: 0.4, fontSize: 24, bold: true, color: "1f2937" });
+        slide2.addText(`분석 제목 : ${title}\n측정 일자 : ${date}`, { x: 0.5, y: 1.0, fontSize: 12, color: "4b5563" });
+        
+        // 왼쪽 메인 맵, 오른쪽 레퍼런스 맵 배치
+        slide2.addImage({ data: mainImgB64, x: 0.5, y: 1.6, w: 3.5, h: 3.5 });
+        slide2.addImage({ data: refImgB64, x: 4.5, y: 1.6, w: 3.5, h: 3.5 });
+        
+        // 분석 조건 텍스트 박스
+        slide2.addText("Drop Liquid : \n\n오차 범위 : ± 2°", { 
+          x: 8.2, y: 1.6, w: 1.5, h: 3.5, fontSize: 13, color: "333333", valign: "top" 
+        });
+        
+        // 하단 코멘트란
+        slide2.addText("분석결과 : ", { 
+          x: 0.5, y: 5.5, w: 9, h: 1.2, fontSize: 14, bold: true, color: "1e293b", fill: "f8fafc", p: 10
+        });
+
+        // [3페이지] Raw Data (편집 가능한 표)
+        let slide3 = pres.addSlide();
+        slide3.addText("Raw Data & Statistics", { x: 0.5, y: 0.4, fontSize: 24, bold: true, color: "1f2937" });
+        
+        let tableData = [];
+        let headerRow = ["Point No.", "X (mm)", "Y (mm)", ...sampleNames];
+        // 헤더 세팅
+        tableData.push(headerRow.map(text => ({ text: text, options: { bold: true, fill: "e2e8f0", align: "center", fontSize: 11 } })));
+        
+        // 본문 데이터 세팅
+        parsedData.forEach((pt, idx) => {
+          let row = [idx + 1, pt.x, pt.y];
+          pt.values.forEach(v => row.push(v !== null ? v.toFixed(1) : "-"));
+          tableData.push(row.map(val => ({ text: String(val), options: { align: "center", fontSize: 11 } })));
+        });
+        
+        // 통계 푸터 세팅
+        let aveRow = ["Average (AVE)", "-", "-"];
+        let sdRow = ["Standard Deviation (SD)", "-", "-"];
+        let rsdRow = ["% RSD", "-", "-"];
+        
+        sampleNames.forEach((_, sIdx) => {
+           const validValues = parsedData.map(pt => pt.values[sIdx]).filter(v => v !== null && v !== undefined);
+           const stats = calcStats(validValues);
+           aveRow.push(stats.ave);
+           sdRow.push(stats.sd);
+           rsdRow.push(stats.rsd !== "-" ? stats.rsd + "%" : "-");
+        });
+        
+        tableData.push(aveRow.map(v => ({ text: String(v), options: { bold: true, fill: "f1f5f9", align: "center", fontSize: 11 } })));
+        tableData.push(sdRow.map(v => ({ text: String(v), options: { bold: true, fill: "f8fafc", align: "center", fontSize: 11 } })));
+        tableData.push(rsdRow.map(v => ({ text: String(v), options: { bold: true, fill: "ffffff", align: "center", fontSize: 11 } })));
+        
+        // 표 삽입 (열 너비 자동 분배)
+        let colW = [1, 1, 1];
+        sampleNames.forEach(() => colW.push(6 / sampleNames.length));
+        slide3.addTable(tableData, { x: 0.5, y: 1.2, w: 9, colW: colW, border: { pt: 1, color: "cccccc" } });
+        
+        // 파일 저장 다운로드
+        pres.writeFile({ fileName: `${title}.pptx` });
+        
+        closePptModal();
+      } catch(err) {
+        alert("리포트 생성 중 오류가 발생했습니다. 브라우저 설정을 확인해주세요.");
+        console.error(err);
+      } finally {
+        btn.innerText = "문서 생성 및 다운로드";
+        btn.disabled = false;
+      }
     }
   </script>
 </body>
