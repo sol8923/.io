@@ -140,7 +140,6 @@
         <button class="tab-btn" id="btn-tab-table" onclick="switchTab('tab-table', this)">📊 Data Table</button>
       </div>
 
-      <!-- [탭 1] Map View -->
       <div id="tab-map" class="tab-content active">
         <div class="map-center">
           <div class="stats-bar">
@@ -160,7 +159,6 @@
           </div>
         </div>
 
-        <!-- 맵 우측 보조 (Reference Map) -->
         <div class="map-right">
           <div class="panel">
             <h2 class="panel-title">Color Range (Legend)</h2>
@@ -174,18 +172,15 @@
           <div class="panel">
             <h2 class="panel-title">분석 위치 참고도</h2>
             <div class="ref-map-container">
-              <!-- 완벽한 축 스케일을 위한 ViewBox 대폭 확장 (텍스트 짤림 완전 방지) -->
               <svg class="ref-wafer" viewBox="-80 -70 470 460" id="ref-wafer" xmlns="http://www.w3.org/2000/svg">
                 <defs>
                   <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
                     <path d="M 0 0 L 10 5 L 0 10 z" fill="#475569" />
                   </marker>
                 </defs>
-                
                 <circle cx="150" cy="150" r="150" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"></circle>
                 <path d="M 145 300 L 155 300 L 150 295 Z" fill="#cbd5e1"></path>
                 
-                <!-- X 축 (웨이퍼 외곽 정밀 작도) -->
                 <line x1="0" y1="330" x2="330" y2="330" stroke="#475569" stroke-width="2" marker-end="url(#arrow)" />
                 <line x1="0" y1="325" x2="0" y2="335" stroke="#475569" stroke-width="2"/>
                 <line x1="150" y1="325" x2="150" y2="335" stroke="#475569" stroke-width="2"/>
@@ -196,7 +191,6 @@
                 <text x="300" y="355" font-size="16" font-weight="bold" fill="#475569" text-anchor="middle">300</text>
                 <text x="365" y="337" font-size="16" font-weight="bold" fill="#475569" text-anchor="middle">X (mm)</text>
                 
-                <!-- Y 축 (웨이퍼 외곽 정밀 작도) -->
                 <line x1="-30" y1="300" x2="-30" y2="-30" stroke="#475569" stroke-width="2" marker-end="url(#arrow)" />
                 <line x1="-35" y1="300" x2="-25" y2="300" stroke="#475569" stroke-width="2"/>
                 <line x1="-35" y1="150" x2="-25" y2="150" stroke="#475569" stroke-width="2"/>
@@ -214,7 +208,6 @@
         </div>
       </div>
 
-      <!-- [탭 2] Data Table -->
       <div id="tab-table" class="tab-content" style="display: none; flex-direction: column;">
         <div class="table-top-bar">
           <span class="unit-label">단위: 각도 (°)</span>
@@ -225,7 +218,6 @@
     </div>
   </div>
 
-  <!-- PPT 모달 -->
   <div id="ppt-modal" class="modal">
     <div class="modal-content">
       <h3>📥 PPT 리포트 자동 생성</h3>
@@ -472,12 +464,12 @@
 
 
     // ==========================================
-    // PPT Export (디자인 & 배치 & 렌더링 최적화 50회 교정판)
+    // PPT Export (세로형 스택 레이아웃 & 1페이지 락(Lock) 적용판)
     // ==========================================
     
     function svgToBase64(svgElement) {
       return new Promise((resolve, reject) => {
-        const scale = 4; // 4배수 초고화질 렌더링 적용
+        const scale = 4; // 4배수 초고화질
         const svgClone = svgElement.cloneNode(true);
         const svgData = new XMLSerializer().serializeToString(svgClone);
         const canvas = document.createElement("canvas");
@@ -537,7 +529,7 @@
         const date = document.getElementById("ppt-date").value || new Date().toISOString().split('T')[0];
         
         let pres = new PptxGenJS();
-        pres.layout = "LAYOUT_16x9"; // 가로 10, 세로 5.625 (인치)
+        pres.layout = "LAYOUT_16x9"; // 10 x 5.625 (인치)
         
         // 1. 마스터 템플릿
         pres.defineSlideMaster({
@@ -551,7 +543,7 @@
           slideNumber: { x: 8.7, y: 5.25, color: "94a3b8", fontFace: "맑은 고딕", fontSize: 10, align: "right" }
         });
 
-        // 2. [페이지 1] 표지 (Cover)
+        // 2. [페이지 1] 표지
         let slide1 = pres.addSlide({ masterName: "REPORT_MASTER" });
         slide1.addText("CONTACT ANGLE ANALYSIS", { x: 1, y: 1.8, w: 8, h: 0.5, fontSize: 14, fontFace: "Arial", bold: true, color: "64748b", align: "center", charSpacing: 2 });
         slide1.addText(title, { x: 1, y: 2.3, w: 8, h: 1.0, fontSize: 36, fontFace: "맑은 고딕", bold: true, color: "0c4a9e", align: "center", valign: "middle" });
@@ -561,32 +553,31 @@
         const refSvg = document.getElementById("ref-wafer");
         const refImgB64 = await svgToBase64(refSvg);
         
-        // 3. [페이지 2] Raw Data, Reference Map & 코멘트 박스
+        // 3. [페이지 2] Raw Data (1페이지 강제 핏), Reference Map, 조건/코멘트 (2분할 레이아웃)
         let slideData = pres.addSlide({ masterName: "REPORT_MASTER" });
-        slideData.addShape(pres.ShapeType.rect, { x: 0.3, y: 0.4, w: 0.08, h: 0.35, fill: "0c4a9e" }); 
-        slideData.addText("Raw Data & Analysis Conditions", { x: 0.45, y: 0.4, w: 6, h: 0.35, fontSize: 20, fontFace: "Arial", bold: true, color: "0f172a" });
+        slideData.addShape(pres.ShapeType.rect, { x: 0.3, y: 0.35, w: 0.08, h: 0.35, fill: "0c4a9e" }); 
+        slideData.addText("Raw Data & Analysis Conditions", { x: 0.45, y: 0.35, w: 6, h: 0.35, fontSize: 20, fontFace: "Arial", bold: true, color: "0f172a" });
         
-        // 좌측 (참고도 및 분석 조건)
-        slideData.addShape(pres.ShapeType.rect, { x: 0.3, y: 1.0, w: 2.3, h: 2.1, fill: "ffffff", line: { color: "e2e8f0", width: 1 } });
-        slideData.addText("분석 위치 참고도", { x: 0.3, y: 1.0, w: 2.3, h: 0.3, fontSize: 10, fontFace: "맑은 고딕", bold: true, color: "1e293b", fill: "f8fafc", align: "center" });
-        slideData.addImage({ data: refImgB64, x: 0.45, y: 1.3, w: 2.0, h: 1.7 });
+        // 좌측 (기둥 배치: 참고도 -> 분석 조건 -> 코멘트)
+        slideData.addShape(pres.ShapeType.rect, { x: 0.3, y: 0.85, w: 2.3, h: 2.0, fill: "ffffff", line: { color: "e2e8f0", width: 1 } });
+        slideData.addText("분석 위치 참고도", { x: 0.3, y: 0.85, w: 2.3, h: 0.3, fontSize: 10, fontFace: "맑은 고딕", bold: true, color: "1e293b", fill: "f8fafc", align: "center" });
+        slideData.addImage({ data: refImgB64, x: 0.45, y: 1.15, w: 2.0, h: 1.6 });
         
-        slideData.addShape(pres.ShapeType.rect, { x: 0.3, y: 3.2, w: 2.3, h: 1.1, fill: "f8fafc", line: { color: "e2e8f0", width: 1 } });
-        slideData.addText("Droplet Volume (μL) :\n\n\n오차 범위 : ± 2°", { x: 0.4, y: 3.3, w: 2.1, h: 0.9, fontSize: 10, fontFace: "맑은 고딕", color: "334155", valign: "top" });
+        slideData.addShape(pres.ShapeType.rect, { x: 0.3, y: 2.95, w: 2.3, h: 0.9, fill: "f8fafc", line: { color: "e2e8f0", width: 1 } });
+        slideData.addText("Droplet Volume (μL) :\n\n오차 범위 : ± 2°", { x: 0.4, y: 3.05, w: 2.1, h: 0.7, fontSize: 10, fontFace: "맑은 고딕", color: "334155", valign: "top" });
 
-        // 하단 (전체 너비 10인치 중 9.4인치 사용 - 광활한 코멘트 박스)
-        slideData.addShape(pres.ShapeType.rect, { x: 0.3, y: 4.4, w: 9.4, h: 0.7, fill: "f1f5f9", line: { color: "cbd5e1", width: 1 } });
-        slideData.addText("분석 의견 : ", { x: 0.4, y: 4.5, w: 9.2, h: 0.5, fontSize: 12, fontFace: "맑은 고딕", bold: true, color: "0f172a", valign: "top" });
+        slideData.addShape(pres.ShapeType.rect, { x: 0.3, y: 3.95, w: 2.3, h: 1.15, fill: "f1f5f9", line: { color: "cbd5e1", width: 1 } });
+        slideData.addText("분석 의견 : ", { x: 0.4, y: 4.05, w: 2.1, h: 0.95, fontSize: 11, fontFace: "맑은 고딕", bold: true, color: "0f172a", valign: "top" });
 
-        // 우측 (테이블 렌더링)
+        // 우측 (Raw Data Table 1페이지 강제 핏)
         let tableData = [];
         let headerRow = ["Point No.", "X (mm)", "Y (mm)", ...sampleNames];
-        tableData.push(headerRow.map(text => ({ text: text, options: { fontFace: "맑은 고딕", bold: true, fill: "e2e8f0", align: "center", valign: "middle", fontSize: 9, margin: 0.05 } })));
+        tableData.push(headerRow.map(text => ({ text: text, options: { fontFace: "맑은 고딕", bold: true, fill: "e2e8f0", align: "center", valign: "middle", fontSize: 6.5, margin: 0.02 } })));
         
         parsedData.forEach((pt, idx) => {
           let row = [idx + 1, pt.x, pt.y];
           pt.values.forEach(v => row.push(v !== null ? v.toFixed(1) : "-"));
-          tableData.push(row.map(val => ({ text: String(val), options: { fontFace: "맑은 고딕", align: "center", valign: "middle", fontSize: 9, margin: 0.05 } })));
+          tableData.push(row.map(val => ({ text: String(val), options: { fontFace: "맑은 고딕", align: "center", valign: "middle", fontSize: 6.5, margin: 0.02 } })));
         });
         
         let aveRow = ["AVE", "-", "-"];
@@ -601,23 +592,22 @@
            rsdRow.push(stats.rsd !== "-" ? stats.rsd + "%" : "-");
         });
         
-        tableData.push(aveRow.map(v => ({ text: String(v), options: { fontFace: "Arial", bold: true, fill: "f1f5f9", align: "center", valign: "middle", fontSize: 9, margin: 0.05 } })));
-        tableData.push(sdRow.map(v => ({ text: String(v), options: { fontFace: "Arial", bold: true, fill: "f8fafc", align: "center", valign: "middle", fontSize: 9, margin: 0.05 } })));
-        tableData.push(rsdRow.map(v => ({ text: String(v), options: { fontFace: "Arial", bold: true, fill: "ffffff", align: "center", valign: "middle", fontSize: 9, margin: 0.05 } })));
+        tableData.push(aveRow.map(v => ({ text: String(v), options: { fontFace: "Arial", bold: true, fill: "f1f5f9", align: "center", valign: "middle", fontSize: 6.5, margin: 0.02 } })));
+        tableData.push(sdRow.map(v => ({ text: String(v), options: { fontFace: "Arial", bold: true, fill: "f8fafc", align: "center", valign: "middle", fontSize: 6.5, margin: 0.02 } })));
+        tableData.push(rsdRow.map(v => ({ text: String(v), options: { fontFace: "Arial", bold: true, fill: "ffffff", align: "center", valign: "middle", fontSize: 6.5, margin: 0.02 } })));
         
-        // 컬럼 비율 최적화 (좌측 3열은 좁게, 샘플은 균등 분배)
-        let colW = [0.6, 0.6, 0.6]; 
-        const remainW = 7.0 - 1.8;
+        let colW = [0.5, 0.5, 0.5]; 
+        const remainW = 7.0 - 1.5;
         sampleNames.forEach(() => colW.push(remainW / sampleNames.length));
         
-        // PPTXGenJS 자동 페이징 기능 켜기 (테이블 높이가 슬라이드를 넘어가면 다음 장에 표기)
-        slideData.addTable(tableData, { x: 2.7, y: 1.0, w: 7.0, colW: colW, border: { pt: 0.5, color: "cbd5e1" }, autoPage: true, autoPageRepeatHeader: true, autoPageLineWeight: -0.5 });
+        // autoPage: false 로 1페이지에 테이블을 모두 욱여넣음 (50포인트 거뜬히 수용)
+        slideData.addTable(tableData, { x: 2.7, y: 0.85, w: 7.0, colW: colW, border: { pt: 0.5, color: "cbd5e1" }, autoPage: false });
         
         
-        // 4. [페이지 3~] 다중 샘플 Map View 전용 슬라이드 (코멘트 박스 제거 & 3x2 배열 가시성 극대화)
+        // 4. [페이지 3~] 다중 샘플 Map View (텍스트 스택(Stack) 레이아웃으로 공백 제로화)
         for (let i = 0; i < sampleNames.length; i++) {
           let slide;
-          // 한 페이지에 6개씩(3x2) 할당 (0, 6, 12... 일때 새 슬라이드 생성)
+          // 한 페이지에 6개씩(3x2) 할당 
           if (i % 6 === 0) {
             slide = pres.addSlide({ masterName: "REPORT_MASTER" });
             slide.addShape(pres.ShapeType.rect, { x: 0.3, y: 0.4, w: 0.08, h: 0.35, fill: "0c4a9e" }); 
@@ -631,29 +621,42 @@
           const validVals = parsedData.map(pt => pt.values[i]).filter(v => v !== null && v !== undefined);
           const stats = calcStats(validVals);
           
-          // 3x2 꽉 찬 그리드 좌표 계산
           const col = (i % 6) % 3;
           const row = Math.floor((i % 6) / 3);
           
-          const cardW = 3.0; // 카드 너비 (3.0 * 3 + 간격 = 9.4)
-          const cardH = 1.9; // 카드 높이
-          const xBase = 0.3 + (col * 3.2); // 간격 0.2
-          const yBase = 1.2 + (row * 2.0); // 간격 0.1
+          const cardW = 3.0; // 카드 너비
+          const cardH = 2.15; // 카드 높이
+          const xBase = 0.3 + (col * 3.15); // 열 간격 0.15
+          const yBase = 0.9 + (row * 2.25); // 행 간격 0.1
 
           // 모듈형 카드 프레임
           slide.addShape(pres.ShapeType.rect, { x: xBase, y: yBase, w: cardW, h: cardH, fill: "ffffff", line: { color: "e2e8f0", width: 1 } });
           
-          // 다크블루 타이틀
+          // 타이틀바
           slide.addShape(pres.ShapeType.rect, { x: xBase, y: yBase, w: cardW, h: 0.25, fill: "1e3a8a" });
           slide.addText(sampleNames[i], { x: xBase, y: yBase, w: cardW, h: 0.25, fontSize: 10, fontFace: "맑은 고딕", bold: true, color: "ffffff", align: "center" });
           
-          // 중앙 웨이퍼 이미지 (카드 안에 완벽한 센터링)
-          slide.addImage({ data: imgB64, x: xBase + 0.8, y: yBase + 0.3, w: 1.4, h: 1.3 });
+          // 중앙 웨이퍼 이미지 (기존 w:1.25 -> 1.8 로 대폭 확대, 가로 공백 완전 제거)
+          slide.addImage({ data: imgB64, x: xBase + 0.05, y: yBase + 0.3, w: 1.8, h: 1.8 });
           
-          // 하단 통계 박스 (AVE, SD, %RSD)
-          slide.addShape(pres.ShapeType.rect, { x: xBase, y: yBase + 1.65, w: cardW, h: 0.25, fill: "f1f5f9" });
-          slide.addText(`AVE: ${stats.ave}   |   SD: ${stats.sd}   |   %RSD: ${stats.rsd !== "-" ? stats.rsd + "%" : "-"}`, 
-            { x: xBase, y: yBase + 1.65, w: cardW, h: 0.25, fontSize: 9, fontFace: "Arial", bold: true, color: "1e293b", align: "center" });
+          // 우측 통계 스택 (AVE, SD, %RSD 세로 정렬)
+          const statX = xBase + 1.95;
+          const statW = 0.95;
+
+          // AVE
+          slide.addShape(pres.ShapeType.rect, { x: statX, y: yBase + 0.4, w: statW, h: 0.15, fill: "f1f5f9" });
+          slide.addText("AVE", { x: statX, y: yBase + 0.4, w: statW, h: 0.15, fontSize: 7, fontFace: "Arial", bold: true, color: "64748b", align: "center" });
+          slide.addText(stats.ave, { x: statX, y: yBase + 0.55, w: statW, h: 0.25, fontSize: 11, fontFace: "Arial", bold: true, color: "1e293b", align: "center" });
+
+          // SD
+          slide.addShape(pres.ShapeType.rect, { x: statX, y: yBase + 0.9, w: statW, h: 0.15, fill: "f1f5f9" });
+          slide.addText("SD", { x: statX, y: yBase + 0.9, w: statW, h: 0.15, fontSize: 7, fontFace: "Arial", bold: true, color: "64748b", align: "center" });
+          slide.addText(stats.sd, { x: statX, y: yBase + 1.05, w: statW, h: 0.25, fontSize: 11, fontFace: "Arial", bold: true, color: "1e293b", align: "center" });
+
+          // %RSD
+          slide.addShape(pres.ShapeType.rect, { x: statX, y: yBase + 1.4, w: statW, h: 0.15, fill: "f1f5f9" });
+          slide.addText("%RSD", { x: statX, y: yBase + 1.4, w: statW, h: 0.15, fontSize: 7, fontFace: "Arial", bold: true, color: "64748b", align: "center" });
+          slide.addText(stats.rsd !== "-" ? stats.rsd + "%" : "-", { x: statX, y: yBase + 1.55, w: statW, h: 0.25, fontSize: 11, fontFace: "Arial", bold: true, color: "1e293b", align: "center" });
         }
         
         pres.writeFile({ fileName: `${title}.pptx` });
