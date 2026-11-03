@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>개인 업무 비서 (To-Do & Calendar)</title>
+  <style>
+    body { font-family: 'Malgun Gothic', sans-serif; margin: 0; padding: 20px; background-color: #f0f2f5; color: #333; }
+    
+    /* 최상단 타이틀 및 설정 */
+    .header-area { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #ddd; }
+    .header-area h1 { margin: 0; font-size: 24px; color: #1a73e8; display: flex; align-items: center; gap: 10px; }
+    .btn-setting { background: #6c757d; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: bold; }
+    .btn-setting:hover { background: #5a6268; }
+
+    /* 엑셀 탭(Tab) 내비게이션 스타일 */
+    .tab-nav { display: flex; gap: 5px; margin-bottom: 20px; border-bottom: 2px solid #1a73e8; }
+    .tab-btn { padding: 10px 25px; border: 1px solid #ccc; border-bottom: none; border-radius: 8px 8px 0 0; background: #e9ecef; cursor: pointer; font-weight: bold; font-size: 15px; transition: all 0.2s; color: #555; }
+    .tab-btn:hover { background: #dee2e6; }
+    .tab-btn.active { background: #1a73e8; color: white; border-color: #1a73e8; }
+
+    /* 탭 콘텐츠 컨테이너 */
+    .tab-content { display: none; background: white; padding: 25px; border-radius: 0 0 8px 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); min-height: 500px; animation: fadeIn 0.3s ease; }
+    .tab-content.active { display: block; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ========== [탭 1] 할 일 / 일정 입력 ========== */
+    .todo-input-wrap { display: flex; gap: 10px; margin-bottom: 20px; background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #ddd; }
+    .todo-input-wrap input[type="date"] { padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+    .todo-input-wrap input[type="text"] { flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
+    .btn-add { background: #28a745; color: white; border: none; padding: 8px 20px; border-radius: 4px; font-weight: bold; cursor: pointer; }
+    .btn-add:hover { background: #218838; }
+
+    .todo-list { list-style: none; padding: 0; margin: 0; }
+    .todo-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; border-bottom: 1px solid #eee; transition: background 0.2s; }
+    .todo-item:hover { background: #f8f9fa; }
+    .todo-info { display: flex; align-items: center; gap: 15px; }
+    .todo-date { font-size: 12px; background: #17a2b8; color: white; padding: 3px 8px; border-radius: 12px; font-weight: bold; }
+    .todo-text { font-size: 15px; font-weight: 500; }
+    .todo-item.completed .todo-text { text-decoration: line-through; color: #999; }
+    .todo-actions { display: flex; gap: 8px; }
+    
+    .btn-toggle { background: #ffc107; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; }
+    .todo-item.completed .btn-toggle { background: #6c757d; color: white; }
+    .btn-del { background: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; }
+
+    /* ========== [탭 2] 달력 뷰 ========== */
+    .cal-header { display: flex; justify-content: center; align-items: center; margin-bottom: 20px; gap: 15px; }
+    .btn-cal { padding: 5px 15px; background: white; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; font-weight: bold; }
+    .btn-cal:hover { background: #f0f0f0; }
+    
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; }
+    .cal-day-name { font-weight: bold; padding: 10px; background: #f0f0f0; border-radius: 4px; }
+    .cal-day-name.sun { color: red; }
+    .cal-day-name.sat { color: blue; }
+    
+    .cal-cell { border: 1px solid #ddd; border-radius: 4px; height: 100px; padding: 5px; text-align: left; display: flex; flex-direction: column; overflow-y: auto; background: white; }
+    .cal-cell .date-num { font-weight: bold; font-size: 14px; margin-bottom: 5px; display: block; }
+    .cal-cell.sun .date-num { color: red; }
+    .cal-cell.sat .date-num { color: blue; }
+    .cal-cell.today { border: 2px solid #1a73e8; background: #e8f0fe; }
+    
+    .cal-event { font-size: 11px; background: #d4edda; border-left: 3px solid #28a745; padding: 3px; margin-bottom: 3px; border-radius: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+    .cal-event.completed { background: #e2e3e5; border-color: #6c757d; text-decoration: line-through; color: #666; }
+
+    /* ========== [탭 3] 자유 메모 ========== */
+    .memo-wrap { display: flex; flex-direction: column; height: 100%; gap: 10px; }
+    .memo-textarea { flex: 1; min-height: 400px; padding: 15px; border: 1px solid #ccc; border-radius: 8px; resize: none; font-size: 15px; line-height: 1.6; box-sizing: border-box; font-family: 'Malgun Gothic', sans-serif; }
+    .btn-save-memo { background: #1a73e8; color: white; border: none; padding: 10px; border-radius: 4px; font-weight: bold; cursor: pointer; align-self: flex-end; width: 120px; }
+    .btn-save-memo:hover { background: #1557b0; }
+
+    /* 공통 팝업(설정 등) */
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
+    .modal-content { background: white; padding: 25px; border-radius: 10px; width: 320px; display: flex; flex-direction: column; gap: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+    .modal-content input { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; margin-top: 3px; }
+    .btn-group { display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; }
+  </style>
+</head>
+<body>
+
+  <div class="header-area">
+    <h1>💼 개인 업무 비서</h1>
+    <button class="btn-setting" onclick="openSettings()">⚙️ 연결 설정</button>
+  </div>
+
+  <!-- 엑셀 스타일 탭 내비게이션 -->
+  <div class="tab-nav">
+    <button class="tab-btn active" onclick="switchTab('tab-todo', this)">📋 할 일 목록</button>
+    <button class="tab-btn" onclick="switchTab('tab-calendar', this)">📅 달력 뷰</button>
+    <button class="tab-btn" onclick="switchTab('tab-memo', this)">📝 자유 메모</button>
+  </div>
+
+  <!-- 탭 1: 할 일 입력 및 목록 -->
+  <div id="tab-todo" class="tab-content active">
+    <div class="todo-input-wrap">
+      <input type="date" id="todo-date">
+      <input type="text" id="todo-text" placeholder="새로운 업무나 일정을 입력하세요 (Enter 키 지원)" onkeypress="if(event.key==='Enter') addTodo()">
+      <button class="btn-add" onclick="addTodo()">추가</button>
+    </div>
+    
+    <div style="margin-bottom: 10px; font-weight: bold; color: #555; font-size: 14px;">진행 중인 업무</div>
+    <ul class="todo-list" id="todo-active-list"></ul>
+    
+    <div style="margin-top: 30px; margin-bottom: 10px; font-weight: bold; color: #888; font-size: 14px;">완료된 업무</div>
+    <ul class="todo-list" id="todo-completed-list"></ul>
+  </div>
+
+  <!-- 탭 2: 달력 뷰 -->
+  <div id="tab-calendar" class="tab-content">
+    <div class="cal-header">
+      <button class="btn-cal" onclick="changeMonth(-1)">◀ 이전달</button>
+      <h2 id="cal-month-title" style="margin: 0; min-width: 120px; text-align: center;"></h2>
+      <button class="btn-cal" onclick="changeMonth(1)">다음달 ▶</button>
+      <button class="btn-cal" style="background:#e8f0fe; color:#1a73e8; border-color:#1a73e8;" onclick="goToToday()">오늘</button>
+    </div>
+    <div class="cal-grid">
+      <div class="cal-day-name sun">일</div><div class="cal-day-name">월</div><div class="cal-day-name">화</div>
+      <div class="cal-day-name">수</div><div class="cal-day-name">목</div><div class="cal-day-name">금</div><div class="cal-day-name sat">토</div>
+    </div>
+    <div class="cal-grid" id="cal-grid-body"></div>
+  </div>
+
+  <!-- 탭 3: 자유 메모 -->
+  <div id="tab-memo" class="tab-content">
+    <div class="memo-wrap">
+      <div style="font-size: 13px; color: #666;">※ 자동 저장이 되지 않으므로 작성 후 반드시 우측 하단의 [저장] 버튼을 눌러주세요.</div>
+      <textarea id="memo-textarea" class="memo-textarea" placeholder="아이디어, 회의록, 코드 조각 등 자유롭게 기록하세요..."></textarea>
+      <button class="btn-save-memo" id="btn-save-memo" onclick="saveMemo()">저장하기 💾</button>
+    </div>
+  </div>
+
+  <!-- 설정 모달 (깃허브 연동) -->
+  <div id="settings-modal" class="modal">
+    <div class="modal-content">
+      <h3 style="margin-top:0;">⚙️ 동기화 설정</h3>
+      <div>
+        <label>🔑 깃허브 관리자 토큰</label>
+        <!-- 기존 달력 앱과 토큰을 공유합니다 -->
+        <input type="password" id="github-token" oninput="localStorage.setItem('calendar_github_token', this.value)">
+      </div>
+      <p style="font-size:12px; color:#666;">다른 브라우저나 PC에서도 동일한 데이터를 불러옵니다.</p>
+      <div class="btn-group">
+        <button onclick="closeSettings()" style="background:#1a73e8; color:white; border:none; padding:6px 12px; border-radius:4px;">확인 및 로드</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 깃허브 데이터베이스 설정
+    const REPO = "sol8923/sh23.github.io";
+    const FILE_PATH = "personal_data.json"; // 개인용 별도 DB 파일 사용
+    const API_URL = `https://api.github.com/repos/${REPO}/contents/${FILE_PATH}`;
+    const RAW_URL = `https://raw.githubusercontent.com/${REPO}/main/${FILE_PATH}`;
+
+    // 내부 상태 데이터
+    let appData = {
+      todos: [],    // { id, date, text, completed }
+      memo: ""      // 자유 메모 텍스트
+    };
+    let fileSha = null;
+    let calDate = new Date();
+
+    // 초기화 및 토큰 연동
+    const savedToken = localStorage.getItem("calendar_github_token");
+    if (savedToken) document.getElementById("github-token").value = savedToken;
+    document.getElementById("todo-date").value = getYYYYMMDD(new Date());
+
+    // 탭 전환 로직
+    function switchTab(tabId, btnEl) {
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      
+      document.getElementById(tabId).classList.add('active');
+      btnEl.classList.add('active');
+      
+      // 달력 탭으로 넘어갈 때마다 최신 데이터로 달력 다시 그리기
+      if (tabId === 'tab-calendar') renderCalendar();
+    }
+
+    // 유틸 함수
+    function getYYYYMMDD(d) {
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+
+    // ----- 데이터 통신 로직 -----
+    async function fetchData() {
+      let isLoaded = false;
+      const token = document.getElementById("github-token").value;
+      
+      // 토큰이 있으면 API 읽기 시도
+      if (token) {
+        try {
+          const res = await fetch(API_URL + "?t=" + new Date().getTime(), { headers: { "Authorization": `token ${token}` } });
+          if (res.ok) {
+            const data = await res.json();
+            fileSha = data.sha;
+            appData = JSON.parse(decodeURIComponent(escape(atob(data.content))));
+            if(!appData.todos) appData.todos = [];
+            if(appData.memo === undefined) appData.memo = "";
+            isLoaded = true;
+          } else if (res.status === 404) {
+            appData = { todos: [], memo: "" };
+            fileSha = null;
+            isLoaded = true;
+          }
+        } catch (e) { console.error("API 로드 에러"); }
+      }
+
+      // 없거나 실패 시 Raw 주소로 우회 읽기
+      if (!isLoaded) {
+        try {
+          const rawRes = await fetch(RAW_URL + "?t=" + new Date().getTime());
+          if (rawRes.ok) {
+            appData = await rawRes.json();
+            if(!appData.todos) appData.todos = [];
+            if(appData.memo === undefined) appData.memo = "";
+          }
+        } catch (e) { console.error("Raw 로드 에러"); }
+      }
+
+      refreshAllViews();
+    }
+
+    async function syncToServer() {
+      const token = document.getElementById("github-token").value;
+      if (!token) {
+        alert("동기화 토큰이 없습니다. 우측 상단 설정에서 입력해주세요.");
+        return false;
+      }
+
+      // 충돌 방지를 위한 최신 SHA 갱신
+      try {
+        const res = await fetch(API_URL + "?t=" + new Date().getTime(), { headers: { "Authorization": `token ${token}` } });
+        if (res.ok) {
+          const data = await res.json();
+          fileSha = data.sha;
+        }
+      } catch(e){}
+
+      try {
+        const payload = {
+          message: "개인 업무 데이터 업데이트",
+          content: btoa(unescape(encodeURIComponent(JSON.stringify(appData, null, 2))))
+        };
+        if (fileSha) payload.sha = fileSha;
+
+        const putRes = await fetch(API_URL, {
+          method: "PUT",
+          headers: { "Authorization": `token ${token}`, "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        if (putRes.ok) {
+          const resData = await putRes.json();
+          fileSha = resData.content.sha;
+          return true;
+        } else {
+          alert("저장 권한 오류. 토큰을 확인하세요.");
+          return false;
+        }
+      } catch (e) {
+        alert("네트워크 통신 오류");
+        return false;
+      }
+    }
+
+    // 모든 화면 동기화
+    function refreshAllViews() {
+      renderTodos();
+      renderCalendar();
+      document.getElementById("memo-textarea").value = appData.memo;
+    }
+
+    // ----- 탭 1: 할 일 관리 -----
+    async function addTodo() {
+      const dateVal = document.getElementById("todo-date").value;
+      const textVal = document.getElementById("todo-text").value.trim();
+      
+      if (!dateVal || !textVal) return alert("날짜와 내용을 모두 입력하세요.");
+
+      appData.todos.push({
+        id: Date.now(),
+        date: dateVal,
+        text: textVal,
+        completed: false
+      });
+
+      document.getElementById("todo-text").value = "";
+      renderTodos(); // 화면 즉시 반영
+      await syncToServer(); // 백그라운드 동기화
+    }
+
+    async function toggleTodo(id) {
+      const todo = appData.todos.find(t => t.id === id);
+      if (todo) {
+        todo.completed = !todo.completed;
+        renderTodos();
+        await syncToServer();
+      }
+    }
+
+    async function deleteTodo(id) {
+      if (!confirm("삭제하시겠습니까?")) return;
+      appData.todos = appData.todos.filter(t => t.id !== id);
+      renderTodos();
+      await syncToServer();
+    }
+
+    function renderTodos() {
+      const activeList = document.getElementById("todo-active-list");
+      const compList = document.getElementById("todo-completed-list");
+      activeList.innerHTML = ""; compList.innerHTML = "";
+
+      // 날짜 오름차순 정렬
+      const sorted = [...appData.todos].sort((a, b) => a.date.localeCompare(b.date));
+
+      sorted.forEach(t => {
+        const isPast = t.date < getYYYYMMDD(new Date()) && !t.completed;
+        const dateStyle = isPast ? "background: #dc3545;" : ""; // 기한 지난 미완료 업무는 빨간색
+
+        const li = `
+          <li class="todo-item ${t.completed ? 'completed' : ''}">
+            <div class="todo-info">
+              <span class="todo-date" style="${dateStyle}">${t.date.substring(5).replace('-', '/')}</span>
+              <span class="todo-text">${t.text}</span>
+            </div>
+            <div class="todo-actions">
+              <button class="btn-toggle" onclick="toggleTodo(${t.id})">${t.completed ? '취소' : '완료'}</button>
+              <button class="btn-del" onclick="deleteTodo(${t.id})">삭제</button>
+            </div>
+          </li>
+        `;
+        if (t.completed) compList.innerHTML += li;
+        else activeList.innerHTML += li;
+      });
+    }
+
+    // ----- 탭 2: 달력 뷰 -----
+    function renderCalendar() {
+      const grid = document.getElementById("cal-grid-body");
+      grid.innerHTML = "";
+      
+      const year = calDate.getFullYear();
+      const month = calDate.getMonth();
+      document.getElementById("cal-month-title").innerText = `${year}년 ${month + 1}월`;
+
+      const firstDay = new Date(year, month, 1).getDay();
+      const lastDate = new Date(year, month + 1, 0).getDate();
+      const todayStr = getYYYYMMDD(new Date());
+
+      for(let i=0; i<firstDay; i++) { grid.innerHTML += `<div class="cal-cell" style="background:transparent; border:none;"></div>`; }
+
+      for(let i=1; i<=lastDate; i++) {
+        const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+        const dayOfWeek = new Date(year, month, i).getDay();
+        
+        let cellClass = "cal-cell";
+        if (dayOfWeek === 0) cellClass += " sun";
+        if (dayOfWeek === 6) cellClass += " sat";
+        if (dateStr === todayStr) cellClass += " today";
+
+        // 해당 날짜의 할 일(To-Do) 필터링
+        const dayTodos = appData.todos.filter(t => t.date === dateStr);
+        let eventsHtml = "";
+        
+        dayTodos.forEach(t => {
+          const compClass = t.completed ? "completed" : "";
+          // 달력에서 일정을 클릭하면 할 일 탭으로 넘어가도록 연결
+          eventsHtml += `<div class="cal-event ${compClass}" onclick="switchTab('tab-todo', document.querySelector('.tab-btn'))" title="${t.text}">• ${t.text}</div>`;
+        });
+
+        grid.innerHTML += `
+          <div class="${cellClass}">
+            <span class="date-num">${i}</span>
+            ${eventsHtml}
+          </div>
+        `;
+      }
+    }
+
+    function changeMonth(step) {
+      calDate.setMonth(calDate.getMonth() + step);
+      renderCalendar();
+    }
+    
+    function goToToday() {
+      calDate = new Date();
+      renderCalendar();
+    }
+
+    // ----- 탭 3: 메모장 -----
+    async function saveMemo() {
+      const btn = document.getElementById("btn-save-memo");
+      btn.innerText = "저장 중...";
+      btn.disabled = true;
+
+      appData.memo = document.getElementById("memo-textarea").value;
+      const success = await syncToServer();
+      
+      if (success) {
+        btn.innerText = "저장 완료! ✔️";
+        setTimeout(() => { btn.innerText = "저장하기 💾"; }, 2000);
+      }
+      btn.disabled = false;
+    }
+
+    // ----- 설정 모달 -----
+    function openSettings() { document.getElementById('settings-modal').style.display = 'flex'; }
+    function closeSettings() { document.getElementById('settings-modal').style.display = 'none'; fetchData(); }
+
+    // 앱 시작 시 데이터 불러오기
+    fetchData();
+  </script>
+</body>
+</html>
