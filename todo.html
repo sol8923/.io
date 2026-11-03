@@ -44,7 +44,7 @@
     .cal-event { font-size: 11px; background: #d4edda; border-left: 3px solid #28a745; padding: 4px; margin-bottom: 3px; border-radius: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; transition: background 0.2s; }
     .cal-event:hover { filter: brightness(0.95); }
     .cal-event.completed { background: #e2e3e5; border-color: #6c757d; text-decoration: line-through; color: #666; }
-    .event-time-badge { font-weight: bold; color: #155724; margin-right: 3px; }
+    .event-time-badge { font-weight: bold; color: #155724; margin-right: 4px; }
     .completed .event-time-badge { color: #666; }
 
     /* ========== [탭 2] 할 일 입력 및 목록 ========== */
@@ -64,7 +64,7 @@
     .todo-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; border-bottom: 1px solid #eee; transition: background 0.2s; }
     .todo-item:hover { background: #f8f9fa; }
     .todo-info { display: flex; align-items: center; gap: 12px; }
-    .todo-date { font-size: 12px; background: #17a2b8; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold; }
+    .todo-date { font-size: 12px; background: #17a2b8; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold; text-align: center; }
     .todo-text { font-size: 15px; font-weight: 500; }
     .todo-item.completed .todo-text { text-decoration: line-through; color: #999; }
     
@@ -91,6 +91,8 @@
     /* 공통 모달 */
     .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
     .modal-content { background: white; padding: 25px; border-radius: 10px; width: 320px; display: flex; flex-direction: column; gap: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+    .modal-content h3 { margin: 0 0 5px 0; }
+    .modal-content label { font-weight: bold; font-size: 0.9em; color: #555; }
     .modal-content input { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; margin-top: 3px; }
     .btn-group { display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; }
   </style>
@@ -102,7 +104,6 @@
     <button class="btn-setting" onclick="openSettings()">⚙️ 동기화 설정</button>
   </div>
 
-  <!-- [수정됨] 달력 뷰를 첫 번째 탭으로 배치 -->
   <div class="tab-nav">
     <button class="tab-btn active" id="btn-tab-cal" onclick="switchTab('tab-calendar', this)">📅 달력 뷰</button>
     <button class="tab-btn" id="btn-tab-todo" onclick="switchTab('tab-todo', this)">📋 할 일 목록</button>
@@ -127,7 +128,6 @@
   <!-- 탭 2: 할 일 입력 및 목록 -->
   <div id="tab-todo" class="tab-content">
     <div class="todo-input-wrap">
-      <!-- [추가됨] 시간 설정 UI -->
       <div class="todo-row-1">
         <input type="date" id="todo-date">
         <label class="checkbox-wrap">
@@ -193,7 +193,6 @@
     let fileSha = null;
     let calDate = new Date();
     
-    // 수정 모드 상태 관리
     let editingTodoId = null;
     let editingMemoId = null;
 
@@ -243,7 +242,6 @@
         } catch (e) { console.error("Raw 로드 에러"); }
       }
 
-      // [마이그레이션] 이전 버전의 단일 문자열 memo를 배열 리스트로 변환
       if (!appData.todos) appData.todos = [];
       if (!appData.memos) {
         appData.memos = [];
@@ -298,7 +296,7 @@
       renderMemos();
     }
 
-    // ----- [기능 1] 할 일 관리 (시간 추가, 수정 기능) -----
+    // ----- [기능 1] 할 일 관리 -----
     function toggleTimeInput() {
       const isAllDay = document.getElementById("todo-allday").checked;
       document.getElementById("todo-time-type").style.display = isAllDay ? 'none' : 'inline-block';
@@ -320,7 +318,6 @@
       btn.disabled = true;
 
       if (editingTodoId) {
-        // 기존 항목 수정
         const t = appData.todos.find(item => item.id === editingTodoId);
         if (t) {
           t.date = dateVal;
@@ -330,7 +327,6 @@
           t.time = timeVal;
         }
       } else {
-        // 신규 추가
         appData.todos.push({
           id: Date.now(),
           date: dateVal,
@@ -343,7 +339,7 @@
       }
 
       await syncToServer();
-      cancelEditTodo(); // 입력창 초기화
+      cancelEditTodo();
       refreshAllViews();
       
       btn.innerText = "항목 추가";
@@ -357,15 +353,13 @@
       editingTodoId = id;
       document.getElementById("todo-date").value = t.date;
       document.getElementById("todo-text").value = t.text;
-      document.getElementById("todo-allday").checked = t.isAllDay !== false; // 예전 데이터 호환(기본 종일)
+      document.getElementById("todo-allday").checked = t.isAllDay !== false; 
       document.getElementById("todo-time-type").value = t.timeType || 'start';
       document.getElementById("todo-time").value = t.time || '';
       
       toggleTimeInput();
       document.getElementById("btn-todo-save").innerText = "수정 완료";
       document.getElementById("btn-todo-cancel").style.display = "inline-block";
-      
-      // 입력창으로 스크롤 이동
       document.getElementById("todo-text").focus();
     }
 
@@ -412,13 +406,13 @@
         const isPast = t.date < getYYYYMMDD(new Date()) && !t.completed;
         const dateStyle = isPast ? "background: #dc3545;" : ""; 
 
-        // 시간 포맷팅
+        // [수정됨] 할 일 목록의 시간 뱃지 표기
         let timeLabel = "";
         if (t.isAllDay !== false) {
           timeLabel = "종일";
         } else {
-          const typeStr = t.timeType === 'deadline' ? '기한' : '시작';
-          timeLabel = `${typeStr} ${t.time}`;
+          const suffix = t.timeType === 'deadline' ? '까지' : '부터';
+          timeLabel = `${t.time} ${suffix}`;
         }
 
         const li = `
@@ -439,7 +433,7 @@
       });
     }
 
-    // ----- [기능 2] 달력 뷰 (클릭 시 할 일 이동 연동) -----
+    // ----- [기능 2] 달력 뷰 -----
     function renderCalendar() {
       const grid = document.getElementById("cal-grid-body");
       grid.innerHTML = "";
@@ -469,14 +463,14 @@
         dayTodos.forEach(t => {
           const compClass = t.completed ? "completed" : "";
           let timeBadge = "";
+          // [수정됨] 달력의 시간 뱃지 표기 로직
           if (t.isAllDay === false) {
-             timeBadge = `<span class="event-time-badge">[${t.time}]</span>`;
+             const suffix = t.timeType === 'deadline' ? '까지' : '부터';
+             timeBadge = `<span class="event-time-badge">[${t.time} ${suffix}]</span>`;
           }
-          // 일정 항목 클릭 시 할 일 탭으로 넘어가서 바로 수정 모드 진입
-          eventsHtml += `<div class="cal-event ${compClass}" onclick="handleEventClick(event, ${t.id})" title="${t.text}">${timeBadge}${t.text}</div>`;
+          eventsHtml += `<div class="cal-event ${compClass}" onclick="handleEventClick(event, ${t.id})" title="${t.text}">${timeBadge} ${t.text}</div>`;
         });
 
-        // 달력의 날짜 빈 칸 클릭 시 할 일 탭으로 넘어가서 신규 등록 모드 진입
         grid.innerHTML += `
           <div class="${cellClass}" onclick="handleCellClick('${dateStr}')">
             <span class="date-num">${i}</span>
@@ -494,7 +488,7 @@
     }
 
     function handleEventClick(event, todoId) {
-      event.stopPropagation(); // 부모(빈칸) 클릭 이벤트 무시
+      event.stopPropagation(); 
       switchTab('tab-todo', document.getElementById('btn-tab-todo'));
       editTodo(todoId);
     }
@@ -508,7 +502,7 @@
       renderCalendar();
     }
 
-    // ----- [기능 4] 자유 메모 (리스트형 관리) -----
+    // ----- [기능 4] 자유 메모 -----
     async function saveMemo() {
       const textVal = document.getElementById("memo-input").value.trim();
       if (!textVal) return alert("메모 내용을 입력하세요.");
@@ -521,10 +515,9 @@
         const m = appData.memos.find(x => x.id === editingMemoId);
         if (m) {
           m.text = textVal;
-          m.timestamp = Date.now(); // 수정 시 위로 올리기 위함
+          m.timestamp = Date.now(); 
         }
       } else {
-        // 새 메모는 배열 끝에 추가 (렌더링 시 역순 정렬)
         appData.memos.push({
           id: Date.now(),
           text: textVal,
@@ -575,13 +568,12 @@
         return;
       }
       
-      // 최신 메모가 가장 상단에 오도록 정렬
       const sorted = [...appData.memos].sort((a, b) => b.timestamp - a.timestamp);
 
       sorted.forEach(m => {
         const d = new Date(m.timestamp);
         const timeStr = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-        const safeText = m.text.replace(/</g, "&lt;").replace(/>/g, "&gt;"); // XSS 방지
+        const safeText = m.text.replace(/</g, "&lt;").replace(/>/g, "&gt;"); 
 
         grid.innerHTML += `
           <div class="memo-card">
@@ -599,7 +591,6 @@
       });
     }
 
-    // ----- 설정 모달 -----
     function openSettings() { document.getElementById('settings-modal').style.display = 'flex'; }
     function closeSettings() { document.getElementById('settings-modal').style.display = 'none'; fetchData(); }
 
