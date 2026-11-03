@@ -74,7 +74,10 @@
     .todo-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; border-bottom: 1px solid #eee; transition: background 0.2s; background: white; margin-bottom: 5px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
     .todo-item:hover { background: #f8f9fa; }
     .todo-info { display: flex; align-items: center; gap: 12px; }
-    .todo-date { font-size: 12px; background: #17a2b8; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold; text-align: center; min-width: 65px; }
+    
+    /* [수정됨] 뱃지 색상은 스크립트에서 동적 처리되도록 백그라운드 속성 제거 */
+    .todo-date { font-size: 12px; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold; text-align: center; min-width: 65px; text-shadow: 0 1px 1px rgba(0,0,0,0.1); }
+    
     .todo-text { font-size: 15px; font-weight: 500; }
     .todo-item.completed .todo-text { text-decoration: line-through; color: #999; }
     
@@ -149,7 +152,7 @@
         </select>
         <input type="time" id="todo-time" style="display:none;">
         
-        <!-- [추가됨] 10가지 색상 팔레트 -->
+        <!-- [수정됨] 6가지 필수 색상 팔레트 -->
         <div class="color-palette-wrap">
           <span class="palette-label">색상:</span>
           <div id="color-palette-container" style="display:flex; gap:6px;"></div>
@@ -212,22 +215,17 @@
     let editingTodoId = null;
     let editingMemoId = null;
 
-    // [추가됨] 10가지 예쁜 파스텔 색상표 (배경색과 좌측 테두리색)
+    // [수정됨] 직관적이고 핵심적인 6가지 색상으로 축소 (흰색 글씨 가독성을 위해 bd 컬러 조정)
     const TODO_COLORS = [
       { bg: "#d4edda", bd: "#28a745" }, // 0: 초록 (기본)
       { bg: "#f8d7da", bd: "#dc3545" }, // 1: 빨강
-      { bg: "#fff3cd", bd: "#ffc107" }, // 2: 노랑
-      { bg: "#d1ecf1", bd: "#17a2b8" }, // 3: 파랑
+      { bg: "#fff3cd", bd: "#e0a800" }, // 2: 노랑 (텍스트 시인성을 위해 약간 진하게)
+      { bg: "#d1ecf1", bd: "#17a2b8" }, // 3: 파랑 (청록)
       { bg: "#e2e3e5", bd: "#6c757d" }, // 4: 회색
-      { bg: "#e8dbff", bd: "#6f42c1" }, // 5: 보라
-      { bg: "#ffe5d9", bd: "#d9734e" }, // 6: 코랄
-      { bg: "#cce3de", bd: "#6b9080" }, // 7: 민트
-      { bg: "#fcd5ce", bd: "#f08080" }, // 8: 핑크
-      { bg: "#fff1e6", bd: "#dda15e" }  // 9: 베이지
+      { bg: "#e8dbff", bd: "#6f42c1" }  // 5: 보라
     ];
-    let selectedColorIdx = 0; // 현재 선택된 색상
+    let selectedColorIdx = 0; 
 
-    // [추가됨] 한국 공휴일 데이터
     const fixedHolidays = {
       "01-01": "신정", "03-01": "삼일절", "05-05": "어린이날", "06-06": "현충일",
       "08-15": "광복절", "10-03": "개천절", "10-09": "한글날", "12-25": "기독탄신일"
@@ -244,7 +242,6 @@
     if (savedToken) document.getElementById("github-token").value = savedToken;
     document.getElementById("todo-date").value = getYYYYMMDD(new Date());
 
-    // 색상 팔레트 화면 렌더링
     function renderColorPalette() {
       const container = document.getElementById('color-palette-container');
       container.innerHTML = TODO_COLORS.map((c, i) => `
@@ -379,7 +376,7 @@
           t.isAllDay = isAllDay;
           t.timeType = timeType;
           t.time = timeVal;
-          t.colorIdx = selectedColorIdx; // 색상 저장
+          t.colorIdx = selectedColorIdx; 
         }
       } else {
         appData.todos.push({
@@ -389,7 +386,7 @@
           isAllDay: isAllDay,
           timeType: timeType,
           time: timeVal,
-          colorIdx: selectedColorIdx, // 색상 저장
+          colorIdx: selectedColorIdx, 
           completed: false
         });
       }
@@ -413,8 +410,8 @@
       document.getElementById("todo-time-type").value = t.timeType || 'start';
       document.getElementById("todo-time").value = t.time || '';
       
-      // 저장된 색상 불러오기 (기존 데이터는 0번 색상)
-      selectedColorIdx = t.colorIdx || 0;
+      // 혹시라도 이전에 지워진 7~10번째 색상이 저장되어 있다면 0번(초록)으로 안전하게 매핑
+      selectedColorIdx = (t.colorIdx !== undefined && t.colorIdx < TODO_COLORS.length) ? t.colorIdx : 0;
       renderColorPalette();
       
       toggleTimeInput();
@@ -429,7 +426,6 @@
       document.getElementById("todo-allday").checked = true;
       document.getElementById("todo-time").value = "";
       
-      // 색상 초기화
       selectedColorIdx = 0;
       renderColorPalette();
 
@@ -469,8 +465,10 @@
 
       sorted.forEach(t => {
         const isPast = t.date < getYYYYMMDD(new Date()) && !t.completed;
-        const dateStyle = isPast ? "background: #dc3545;" : ""; 
-        const c = TODO_COLORS[t.colorIdx || 0]; // 선택한 색상 가져오기
+        const c = TODO_COLORS[t.colorIdx] || TODO_COLORS[0]; // 데이터 안전장치
+        
+        // [수정됨] 할 일 목록 뱃지 배경을 선택한 테마 색상으로 반영 (기한 지났으면 빨강)
+        const dateBgStyle = isPast ? "background: #dc3545; box-shadow: 0 0 5px rgba(220,53,69,0.5);" : `background: ${c.bd};`;
 
         let timeLabel = "";
         if (t.isAllDay !== false) {
@@ -480,11 +478,10 @@
           timeLabel = `${t.time} ${suffix}`;
         }
 
-        // 띠(좌측 보더) 색상을 선택한 색상(bd)으로 지정
         const li = `
           <li class="todo-item ${t.completed ? 'completed' : ''}" style="border-left: 4px solid ${c.bd};">
             <div class="todo-info">
-              <span class="todo-date" style="${dateStyle}">${t.date.substring(5).replace('-', '/')}<br><span style="font-size:10px; font-weight:normal;">${timeLabel}</span></span>
+              <span class="todo-date" style="${dateBgStyle}">${t.date.substring(5).replace('-', '/')}<br><span style="font-size:10px; font-weight:normal;">${timeLabel}</span></span>
               <span class="todo-text">${t.text}</span>
             </div>
             <div class="todo-actions">
@@ -524,7 +521,6 @@
         if (dayOfWeek === 6) cellClass += " sat";
         if (dateStr === todayStr) cellClass += " today";
 
-        // [추가됨] 공휴일 렌더링 로직
         let holidayName = yearlyHolidays[dateStr] || fixedHolidays[monthDayStr];
         let holidayHtml = holidayName ? `<div class="holiday-name">${holidayName}</div>` : "";
         if (holidayName) cellClass += " holiday";
@@ -534,7 +530,7 @@
         
         dayTodos.forEach(t => {
           const compClass = t.completed ? "completed" : "";
-          const c = TODO_COLORS[t.colorIdx || 0]; // 선택한 색상 가져오기
+          const c = TODO_COLORS[t.colorIdx] || TODO_COLORS[0]; // 데이터 안전장치
           let timeBadge = "";
           
           if (t.isAllDay === false) {
@@ -542,7 +538,6 @@
              timeBadge = `<span class="event-time-badge" style="color: ${c.bd};">[${t.time} ${suffix}]</span>`;
           }
           
-          // 배경색과 보더색을 선택한 색상으로 칠함
           const inlineStyle = `background-color: ${c.bg}; border-left: 3px solid ${c.bd};`;
           
           eventsHtml += `<div class="cal-event ${compClass}" style="${inlineStyle}" onclick="handleEventClick(event, ${t.id})" title="${t.text}">${timeBadge} ${t.text}</div>`;
@@ -672,7 +667,6 @@
     function openSettings() { document.getElementById('settings-modal').style.display = 'flex'; }
     function closeSettings() { document.getElementById('settings-modal').style.display = 'none'; fetchData(); }
 
-    // 페이지 시작 시 팔레트 생성 및 데이터 로딩
     renderColorPalette();
     fetchData();
   </script>
