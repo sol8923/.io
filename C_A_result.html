@@ -22,66 +22,95 @@
     .topbar { background: var(--panel-bg); border-bottom: 1px solid var(--border-color); padding: 15px 25px; display: flex; align-items: center; justify-content: space-between; }
     .topbar h1 { margin: 0; font-size: 18px; color: var(--text-main); letter-spacing: -0.5px; }
     
-    /* 전체 레이아웃 (3단 분리) */
-    .dashboard-layout { display: flex; gap: 20px; padding: 20px; align-items: flex-start; max-width: 1400px; margin: 0 auto; }
+    /* 전체 레이아웃 (좌측 컨트롤 / 우측 탭 콘텐츠) */
+    .dashboard-layout { display: flex; gap: 20px; padding: 20px; align-items: flex-start; max-width: 1500px; margin: 0 auto; }
 
-    /* 공통 패널 스타일 */
-    .panel { background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 6px; padding: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-    .panel-title { margin: 0 0 12px 0; font-size: 14px; color: var(--text-main); border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
-
-    /* 1. 좌측: 데이터 및 컨트롤 패널 (280px) */
+    /* 좌측: 데이터 및 컨트롤 패널 (280px) */
     .left-col { width: 280px; flex-shrink: 0; display: flex; flex-direction: column; gap: 15px; }
-    
+    .panel { background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 6px; padding: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .panel-title { margin: 0 0 12px 0; font-size: 14px; color: var(--text-main); border-bottom: 1px solid var(--border-color); padding-bottom: 8px; font-weight: 700; }
+
     .input-wrap textarea { width: 100%; height: 200px; padding: 10px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 4px; font-family: 'Consolas', monospace; font-size: 11px; white-space: pre; overflow: auto; resize: vertical; background: #f9fafb; color: #374151; }
     .input-wrap textarea:focus { outline: none; border-color: var(--primary); background: #fff; }
     .btn-exec { width: 100%; background: var(--primary); color: white; border: none; padding: 10px; border-radius: 4px; font-weight: 600; cursor: pointer; margin-top: 10px; transition: background 0.2s; }
     .btn-exec:hover { background: var(--primary-dark); }
 
-    /* 인터랙티브 컨트롤 폼 */
+    /* 컨트롤 그룹 */
     .control-group { display: flex; flex-direction: column; gap: 10px; }
     .control-row { display: flex; justify-content: space-between; align-items: center; }
     .control-row label { font-size: 12px; color: var(--text-muted); font-weight: 600; }
     .control-row input[type="number"], .control-row select { width: 100px; padding: 5px 8px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 12px; font-family: inherit; }
     .control-row input[type="range"] { width: 100px; }
 
-    /* 2. 중앙: 메인 웨이퍼 시각화 (유동폭) */
-    .center-col { flex: 1; display: flex; flex-direction: column; gap: 15px; min-width: 400px; }
+    /* 우측: 메인 뷰 (탭 영역) */
+    .right-workspace { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+    
+    /* 탭 내비게이션 */
+    .tab-nav { display: flex; gap: 5px; margin-bottom: 15px; border-bottom: 2px solid var(--primary); }
+    .tab-btn { padding: 10px 25px; border: 1px solid var(--border-color); border-bottom: none; border-radius: 6px 6px 0 0; background: #e5e7eb; cursor: pointer; font-weight: 600; font-size: 14px; color: var(--text-muted); transition: all 0.2s; }
+    .tab-btn:hover { background: #d1d5db; }
+    .tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: flex; gap: 20px; animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    /* ========== [탭 1] 맵 뷰 (Map View) ========== */
+    /* 중앙 맵 패널 */
+    .map-center { flex: 1; display: flex; flex-direction: column; gap: 15px; min-width: 450px; }
     
     .stats-bar { display: flex; gap: 15px; }
-    .stat-box { flex: 1; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; padding: 12px; text-align: center; }
+    .stat-box { flex: 1; background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 4px; padding: 12px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
     .stat-box .label { display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 4px; font-weight: 600; }
     .stat-box .val { font-size: 18px; font-weight: bold; color: var(--primary); }
 
-    .main-map-container { display: flex; justify-content: center; align-items: center; padding: 20px; position: relative; }
-    svg.wafer-svg { width: 100%; max-width: 500px; height: auto; display: block; overflow: visible; }
+    .main-map-container { display: flex; justify-content: center; align-items: center; padding: 30px; position: relative; background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .map-sample-title { position: absolute; top: 20px; left: 25px; font-size: 20px; font-weight: 900; color: var(--text-main); background: rgba(255,255,255,0.8); padding: 5px 10px; border-radius: 4px; }
+    
+    svg.wafer-svg { width: 100%; max-width: 550px; height: auto; display: block; overflow: visible; }
     .wafer-bg { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1.5; }
     .wafer-notch { fill: #cbd5e1; }
     .data-point { stroke: #334155; stroke-width: 0.5; transition: stroke-width 0.1s; cursor: crosshair; }
     .data-point:hover { stroke: #0f172a; stroke-width: 2; }
-
-    /* 3. 우측: 측정 위치 참고도 & 범례 (250px) */
-    .right-col { width: 250px; flex-shrink: 0; display: flex; flex-direction: column; gap: 15px; }
     
-    .ref-map-container { display: flex; justify-content: center; align-items: center; padding: 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; }
-    svg.ref-wafer { width: 100%; max-width: 200px; height: auto; display: block; overflow: visible; }
-    .ref-wafer-bg { fill: #ffffff; stroke: #cbd5e1; stroke-width: 1; }
-    .ref-point { fill: #e2e8f0; stroke: #94a3b8; stroke-width: 0.5; }
-    .ref-text { font-size: 10px; font-weight: bold; fill: #475569; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+    /* 값 표시 텍스트 스타일 (가독성을 위한 Stroke 처리) */
+    .point-val-text { font-size: 10px; font-weight: 800; fill: #0f172a; text-anchor: middle; paint-order: stroke; stroke: rgba(255,255,255,0.9); stroke-width: 3px; pointer-events: none; }
 
-    .legend-container { display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; padding: 15px; }
-    .legend-bar { flex: 1; height: 12px; border-radius: 2px; border: 1px solid #cbd5e1; margin: 0 10px; 
-                  /* 밝은 파랑(낮은값) -> 짙은 남색(높은값) */
-                  background: linear-gradient(to right, hsl(210, 80%, 90%), hsl(210, 80%, 30%)); }
+    /* 우측 보조 패널 (레퍼런스 & 범례) */
+    .map-right { width: 260px; flex-shrink: 0; display: flex; flex-direction: column; gap: 15px; }
+    
+    .legend-container { display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid var(--border-color); border-radius: 4px; padding: 15px; }
+    .legend-bar { flex: 1; height: 12px; border-radius: 2px; border: 1px solid #cbd5e1; margin: 0 10px; background: linear-gradient(to right, hsl(210, 80%, 90%), hsl(210, 80%, 30%)); }
     .legend-val { font-size: 11px; font-weight: bold; color: var(--text-muted); }
+
+    .ref-map-container { display: flex; justify-content: center; align-items: center; padding: 20px 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; }
+    svg.ref-wafer { width: 100%; max-width: 220px; height: auto; display: block; overflow: visible; }
+    .ref-wafer-bg { fill: #ffffff; stroke: #cbd5e1; stroke-width: 1; }
+    .ref-point { fill: #cbd5e1; stroke: #64748b; stroke-width: 1; }
+    .ref-text { font-size: 14px; font-weight: 900; fill: #0f172a; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
 
     /* 툴팁 */
     #tooltip { position: absolute; background: rgba(15, 23, 42, 0.9); color: white; padding: 6px 10px; border-radius: 4px; font-size: 11px; pointer-events: none; opacity: 0; transition: opacity 0.1s; z-index: 100; font-family: monospace; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+
+    /* ========== [탭 2] 데이터 표 (Table View) ========== */
+    .table-container { width: 100%; background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); overflow: auto; max-height: 750px; }
+    .data-table { width: 100%; border-collapse: collapse; text-align: right; font-size: 13px; }
+    .data-table th, .data-table td { border: 1px solid var(--border-color); padding: 10px 15px; }
+    .data-table th { background: #f1f5f9; color: var(--text-main); font-weight: bold; text-align: center; position: sticky; top: 0; z-index: 1; }
+    .data-table th.left-align, .data-table td.left-align { text-align: center; }
+    .data-table tbody tr:hover { background: #f8fafc; }
+    
+    /* 테이블 통계 푸터 (Footer) */
+    .data-table tfoot th { background: #e2e8f0; font-weight: bold; color: var(--text-main); position: sticky; bottom: 0; }
+    .data-table tfoot tr.stat-row-ave th { background: #dbeafe; color: #1e3a8a; }
+    .data-table tfoot tr.stat-row-sd th { background: #e0e7ff; color: #3730a3; }
+    .data-table tfoot tr.stat-row-rsd th { background: #ede9fe; color: #5b21b6; }
   </style>
 </head>
 <body>
 
   <div class="topbar">
-    <h1>Contact Angle Analytics</h1>
+    <h1>💧 Contact Angle Wafer Analytics</h1>
   </div>
 
   <div class="dashboard-layout">
@@ -106,62 +135,83 @@
           <hr style="border: 0; border-top: 1px solid #e5e7eb; width: 100%; margin: 5px 0;">
           <div class="control-row">
             <label>Point 크기</label>
-            <input type="range" id="point-size" min="2" max="15" value="6" oninput="renderWaferMap()">
+            <input type="range" id="point-size" min="4" max="25" value="8" oninput="renderWaferMap()">
           </div>
           <div class="control-row">
-            <label>Max Value (짙은색)</label>
+            <label>Max Value</label>
             <input type="number" id="manual-max" step="0.1" onchange="renderWaferMap()">
           </div>
           <div class="control-row">
-            <label>Min Value (밝은색)</label>
+            <label>Min Value</label>
             <input type="number" id="manual-min" step="0.1" onchange="renderWaferMap()">
           </div>
-          <button class="btn-exec" style="background: #64748b; padding: 6px; font-size: 11px;" onclick="resetMinMax()">Auto Range 설정</button>
+          <button class="btn-exec" style="background: #64748b; padding: 6px; font-size: 11px;" onclick="resetMinMax()">Auto Range 리셋</button>
         </div>
       </div>
     </div>
 
-    <!-- 2. 중앙 메인 시각화 패널 -->
-    <div class="center-col" id="center-panel" style="visibility: hidden;">
-      <div class="stats-bar">
-        <div class="stat-box"><span class="label">Average (AVE)</span><span class="val" id="stat-ave">-</span></div>
-        <div class="stat-box"><span class="label">Std Dev (SD)</span><span class="val" id="stat-sd">-</span></div>
-        <div class="stat-box"><span class="label">%RSD</span><span class="val" id="stat-rsd">-</span></div>
-      </div>
+    <!-- 2. 우측 워크스페이스 (탭 영역) -->
+    <div class="right-workspace" id="right-workspace" style="visibility: hidden;">
       
-      <div class="panel main-map-container">
-        <div id="tooltip"></div>
-        <svg class="wafer-svg" viewBox="-10 -10 320 320" id="wafer-svg">
-          <circle cx="150" cy="150" r="150" class="wafer-bg"></circle>
-          <path d="M 145 300 L 155 300 L 150 295 Z" class="wafer-notch"></path>
-          <g id="data-points-group"></g>
-        </svg>
+      <!-- 탭 내비게이션 -->
+      <div class="tab-nav">
+        <button class="tab-btn active" id="btn-tab-map" onclick="switchTab('tab-map', this)">🗺️ Map View</button>
+        <button class="tab-btn" id="btn-tab-table" onclick="switchTab('tab-table', this)">📊 Data Table</button>
       </div>
-    </div>
 
-    <!-- 3. 우측 레퍼런스 및 레전드 패널 -->
-    <div class="right-col" id="right-panel" style="visibility: hidden;">
-      <div class="panel">
-        <h2 class="panel-title">Color Range (Legend)</h2>
-        <div class="legend-container">
-          <span class="legend-val" id="legend-min">Min</span>
-          <div class="legend-bar"></div>
-          <span class="legend-val" id="legend-max">Max</span>
+      <!-- [탭 1] Map View -->
+      <div id="tab-map" class="tab-content active">
+        <!-- 맵 센터 -->
+        <div class="map-center">
+          <div class="stats-bar">
+            <div class="stat-box"><span class="label">Average (AVE)</span><span class="val" id="stat-ave">-</span></div>
+            <div class="stat-box"><span class="label">Std Dev (SD)</span><span class="val" id="stat-sd">-</span></div>
+            <div class="stat-box"><span class="label">%RSD</span><span class="val" id="stat-rsd">-</span></div>
+          </div>
+          
+          <div class="main-map-container">
+            <div class="map-sample-title" id="map-sample-title">Sample Name</div>
+            <div id="tooltip"></div>
+            <svg class="wafer-svg" viewBox="-10 -10 320 320" id="wafer-svg">
+              <circle cx="150" cy="150" r="150" class="wafer-bg"></circle>
+              <path d="M 145 300 L 155 300 L 150 295 Z" class="wafer-notch"></path>
+              <g id="data-points-group"></g>
+            </svg>
+          </div>
+        </div>
+
+        <!-- 맵 우측 보조 (레퍼런스 & 범례) -->
+        <div class="map-right">
+          <div class="panel">
+            <h2 class="panel-title">Color Range (Legend)</h2>
+            <div class="legend-container">
+              <span class="legend-val" id="legend-min">Min</span>
+              <div class="legend-bar"></div>
+              <span class="legend-val" id="legend-max">Max</span>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h2 class="panel-title">측정 위치 참고도</h2>
+            <div class="ref-map-container">
+              <svg class="ref-wafer" viewBox="-10 -10 320 320">
+                <circle cx="150" cy="150" r="150" class="ref-wafer-bg"></circle>
+                <path d="M 145 300 L 155 300 L 150 295 Z" class="wafer-notch"></path>
+                <g id="ref-points-group"></g>
+              </svg>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="panel">
-        <h2 class="panel-title">측정 위치 참고도</h2>
-        <div class="ref-map-container">
-          <svg class="ref-wafer" viewBox="-10 -10 320 320">
-            <circle cx="150" cy="150" r="150" class="ref-wafer-bg"></circle>
-            <path d="M 145 300 L 155 300 L 150 295 Z" class="wafer-notch"></path>
-            <g id="ref-points-group"></g>
-          </svg>
+      <!-- [탭 2] Data Table -->
+      <div id="tab-table" class="tab-content" style="display: none;">
+        <div class="table-container" id="table-container">
+          <!-- 스크립트에서 동적 생성 -->
         </div>
       </div>
-    </div>
 
+    </div>
   </div>
 
   <script>
@@ -169,6 +219,15 @@
     let sampleNames = []; 
     let currentAutoMin = 0;
     let currentAutoMax = 0;
+
+    // 탭 전환 함수
+    function switchTab(tabId, btnEl) {
+      document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      
+      document.getElementById(tabId).style.display = (tabId === 'tab-map') ? 'flex' : 'block';
+      btnEl.classList.add('active');
+    }
 
     function processData() {
       const rawText = document.getElementById("excel-data").value.trim();
@@ -210,7 +269,7 @@
 
       if (parsedData.length === 0) return alert("유효한 숫자 데이터가 없습니다.");
 
-      // 샘플 셀렉터 업데이트
+      // 샘플 셀렉터 갱신
       const selectEl = document.getElementById("sample-select");
       selectEl.innerHTML = "";
       sampleNames.forEach((name, idx) => {
@@ -222,11 +281,25 @@
 
       // 패널 활성화
       document.getElementById("controls-panel").style.display = "flex";
-      document.getElementById("center-panel").style.visibility = "visible";
-      document.getElementById("right-panel").style.visibility = "visible";
+      document.getElementById("right-workspace").style.visibility = "visible";
       
       renderReferenceMap();
-      resetMinMax(); // 자동 범위 세팅 후 렌더링
+      renderDataTable();
+      resetMinMax(); 
+    }
+
+    // 통계 연산 헬퍼 함수
+    function calcStats(validArray) {
+      if (validArray.length === 0) return { ave: "-", sd: "-", rsd: "-" };
+      const sum = validArray.reduce((a, b) => a + b, 0);
+      const ave = sum / validArray.length;
+      let sd = 0;
+      if (validArray.length > 1) {
+        const variance = validArray.reduce((a, b) => a + Math.pow(b - ave, 2), 0) / (validArray.length - 1);
+        sd = Math.sqrt(variance);
+      }
+      const rsd = ave !== 0 ? (sd / ave) * 100 : 0;
+      return { ave: ave.toFixed(2), sd: sd.toFixed(2), rsd: rsd.toFixed(2) };
     }
 
     // 통계 및 자동 범위 리셋
@@ -247,23 +320,17 @@
       renderWaferMap();
     }
 
-    // 채도/명도 기반 단일 톤 그라데이션 컬러 (블루 테마: HSL 210)
     function getColorForValue(value, min, max) {
       if (value === null || isNaN(value)) return "transparent";
-      
-      // 사용자 입력 범위에 맞게 값 제한 (Clipping)
       if (value < min) value = min;
       if (value > max) value = max;
       
       const ratio = (max === min) ? 0.5 : (value - min) / (max - min); 
-      
-      // Lightness(명도)를 90%(가장 밝음)에서 30%(가장 어두움)으로 매핑
-      // 값이 클수록 진한 색(낮은 L)이 나오도록 설정
       const lightness = 90 - (ratio * 60); 
       return `hsl(210, 80%, ${lightness}%)`;
     }
 
-    // 우측 레퍼런스 맵 렌더링 (Point No. 표시)
+    // 측정 위치 참고도 (가시성 대폭 상향)
     function renderReferenceMap() {
       const group = document.getElementById("ref-points-group");
       group.innerHTML = "";
@@ -271,14 +338,12 @@
       parsedData.forEach((pt, idx) => {
         const svgY = 300 - pt.y; 
         
-        // 원 그리기
         const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
         circle.setAttribute("cx", pt.x);
         circle.setAttribute("cy", svgY);
-        circle.setAttribute("r", 8);
+        circle.setAttribute("r", 12); // 원 크기 증가
         circle.setAttribute("class", "ref-point");
         
-        // 텍스트(인덱스) 그리기
         const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
         text.setAttribute("cx", pt.x);
         text.setAttribute("cy", svgY);
@@ -292,36 +357,26 @@
       });
     }
 
-    // 메인 웨이퍼 맵 렌더링
+    // 메인 웨이퍼 맵 시각화
     function renderWaferMap() {
       const sampleIdx = parseInt(document.getElementById("sample-select").value);
       const pointSize = document.getElementById("point-size").value;
       
-      // 수동 입력된 Min/Max 적용
+      document.getElementById("map-sample-title").innerText = sampleNames[sampleIdx];
+
       const maxVal = parseFloat(document.getElementById("manual-max").value) || currentAutoMax;
       const minVal = parseFloat(document.getElementById("manual-min").value) || currentAutoMin;
 
-      // 1. 통계 계산
       const validValues = parsedData.map(pt => pt.values[sampleIdx]).filter(v => v !== null && v !== undefined);
-      if (validValues.length === 0) return;
+      const stats = calcStats(validValues);
 
-      const sum = validValues.reduce((a, b) => a + b, 0);
-      const ave = sum / validValues.length;
-      let sd = 0;
-      if (validValues.length > 1) {
-        const variance = validValues.reduce((a, b) => a + Math.pow(b - ave, 2), 0) / (validValues.length - 1);
-        sd = Math.sqrt(variance);
-      }
-      const rsd = ave !== 0 ? (sd / ave) * 100 : 0;
-
-      document.getElementById("stat-ave").innerText = ave.toFixed(2);
-      document.getElementById("stat-sd").innerText = sd.toFixed(2);
-      document.getElementById("stat-rsd").innerText = rsd.toFixed(2) + "%";
+      document.getElementById("stat-ave").innerText = stats.ave;
+      document.getElementById("stat-sd").innerText = stats.sd;
+      document.getElementById("stat-rsd").innerText = stats.rsd !== "-" ? stats.rsd + "%" : "-";
 
       document.getElementById("legend-max").innerText = maxVal.toFixed(1);
       document.getElementById("legend-min").innerText = minVal.toFixed(1);
 
-      // 2. SVG 렌더링
       const group = document.getElementById("data-points-group");
       group.innerHTML = "";
       const tooltip = document.getElementById("tooltip");
@@ -333,6 +388,7 @@
         const color = getColorForValue(val, minVal, maxVal);
         const svgY = 300 - pt.y; 
 
+        // 점(원)
         const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
         circle.setAttribute("cx", pt.x);
         circle.setAttribute("cy", svgY);
@@ -340,7 +396,14 @@
         circle.setAttribute("fill", color);
         circle.setAttribute("class", "data-point");
 
-        // 툴팁 이벤트 (Point No. 함께 표시)
+        // 텍스트(실제 값)
+        const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        text.setAttribute("x", pt.x);
+        // 원의 크기를 고려해 텍스트를 약간 위쪽에 배치 (겹치지 않게)
+        text.setAttribute("y", svgY - parseInt(pointSize) - 4); 
+        text.setAttribute("class", "point-val-text");
+        text.textContent = val.toFixed(1);
+
         circle.addEventListener("mouseover", (e) => {
           tooltip.innerHTML = `No.${idx + 1} | X:${pt.x}, Y:${pt.y}<br>Value: <span style="color:#60a5fa">${val.toFixed(2)}</span>`;
           tooltip.style.opacity = 1;
@@ -354,7 +417,52 @@
         });
 
         group.appendChild(circle);
+        group.appendChild(text);
       });
+    }
+
+    // 데이터 테이블 렌더링
+    function renderDataTable() {
+      const container = document.getElementById("table-container");
+      
+      let html = `<table class="data-table"><thead><tr>`;
+      html += `<th class="left-align">Point No.</th><th class="left-align">X 좌표</th><th class="left-align">Y 좌표</th>`;
+      
+      sampleNames.forEach(name => {
+        html += `<th>${name}</th>`;
+      });
+      html += `</tr></thead><tbody>`;
+      
+      // 행 데이터 생성
+      parsedData.forEach((pt, idx) => {
+        html += `<tr><td class="left-align"><b>${idx + 1}</b></td><td class="left-align">${pt.x}</td><td class="left-align">${pt.y}</td>`;
+        pt.values.forEach(val => {
+          html += `<td>${val !== null && val !== undefined ? val.toFixed(2) : '-'}</td>`;
+        });
+        html += `</tr>`;
+      });
+      html += `</tbody><tfoot>`;
+
+      // 통계 푸터 생성
+      let aveRow = `<tr class="stat-row-ave"><th colspan="3" class="left-align">Average (AVE)</th>`;
+      let sdRow = `<tr class="stat-row-sd"><th colspan="3" class="left-align">Standard Deviation (SD)</th>`;
+      let rsdRow = `<tr class="stat-row-rsd"><th colspan="3" class="left-align">% RSD</th>`;
+
+      sampleNames.forEach((_, sIdx) => {
+        const validValues = parsedData.map(pt => pt.values[sIdx]).filter(v => v !== null && v !== undefined);
+        const stats = calcStats(validValues);
+        
+        aveRow += `<th>${stats.ave}</th>`;
+        sdRow += `<th>${stats.sd}</th>`;
+        rsdRow += `<th>${stats.rsd !== "-" ? stats.rsd + "%" : "-"}</th>`;
+      });
+
+      aveRow += `</tr>`;
+      sdRow += `</tr>`;
+      rsdRow += `</tr>`;
+      
+      html += aveRow + sdRow + rsdRow + `</tfoot></table>`;
+      container.innerHTML = html;
     }
   </script>
 </body>
