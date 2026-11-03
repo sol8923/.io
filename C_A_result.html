@@ -50,14 +50,14 @@
     svg.wafer-svg { width: 100%; max-width: 550px; height: auto; display: block; overflow: visible; }
     .point-val-text { font-weight: 800; fill: #0f172a; text-anchor: middle; paint-order: stroke; stroke: rgba(255,255,255,0.9); stroke-width: 3px; pointer-events: none; }
 
-    /* Map Right Panel */
-    .map-right { width: 280px; flex-shrink: 0; display: flex; flex-direction: column; gap: 15px; }
+    /* Map Right Panel (Reference Map) */
+    .map-right { width: 320px; flex-shrink: 0; display: flex; flex-direction: column; gap: 15px; }
     .legend-container { display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid var(--border-color); border-radius: 4px; padding: 15px; }
     .legend-bar { flex: 1; height: 12px; border-radius: 2px; border: 1px solid #cbd5e1; margin: 0 10px; background: linear-gradient(to right, hsl(210, 80%, 90%), hsl(210, 80%, 30%)); }
     .legend-val { font-size: 11px; font-weight: bold; color: var(--text-muted); }
     
-    .ref-map-container { display: flex; justify-content: center; align-items: center; padding: 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; }
-    svg.ref-wafer { width: 100%; max-width: 250px; height: auto; display: block; overflow: visible; }
+    .ref-map-container { display: flex; justify-content: center; align-items: center; padding: 20px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; }
+    svg.ref-wafer { width: 100%; max-width: 300px; height: auto; display: block; overflow: visible; }
     #tooltip { position: absolute; background: rgba(15, 23, 42, 0.9); color: white; padding: 6px 10px; border-radius: 4px; font-size: 11px; pointer-events: none; opacity: 0; transition: opacity 0.1s; z-index: 100; font-family: monospace; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
 
     /* Data Table View */
@@ -161,7 +161,7 @@
           </div>
         </div>
 
-        <!-- 맵 우측 보조 -->
+        <!-- 맵 우측 보조 (Reference Map) -->
         <div class="map-right">
           <div class="panel">
             <h2 class="panel-title">Color Range (Legend)</h2>
@@ -173,31 +173,34 @@
           </div>
 
           <div class="panel">
-            <h2 class="panel-title">측정 위치 참고도</h2>
+            <h2 class="panel-title">분석 위치 참고도</h2>
             <div class="ref-map-container">
-              <!-- 단위와 축을 그리기 위해 ViewBox 대폭 확장 (-40 ~ 340) -->
-              <svg class="ref-wafer" viewBox="-40 -40 380 380" id="ref-wafer" xmlns="http://www.w3.org/2000/svg">
-                <!-- 화살표 정의 -->
+              <!-- 실제 축 제도를 위해 ViewBox를 -60 ~ 360 으로 외곽 확장 -->
+              <svg class="ref-wafer" viewBox="-60 -40 400 400" id="ref-wafer" xmlns="http://www.w3.org/2000/svg">
+                <!-- 화살표 Marker 정의 -->
                 <defs>
                   <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
                     <path d="M 0 0 L 10 5 L 0 10 z" fill="#94a3b8" />
                   </marker>
                 </defs>
                 
-                <!-- 웨이퍼 배경 -->
+                <!-- 웨이퍼 배경 및 노치 -->
                 <circle cx="150" cy="150" r="150" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"></circle>
                 <path d="M 145 300 L 155 300 L 150 295 Z" fill="#cbd5e1"></path>
                 
-                <!-- 십자선 (X, Y축 작도) -->
-                <!-- X축: 좌에서 우로 -->
-                <line x1="-20" y1="150" x2="320" y2="150" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4,4" marker-end="url(#arrow)" />
-                <!-- Y축: 데이터상 Y축이 위로 갈수록 커지므로 아래(320)에서 위(-20)로 화살표 -->
-                <line x1="150" y1="320" x2="150" y2="-20" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4,4" marker-end="url(#arrow)" />
+                <!-- X 축 (0 ~ 300) 아래쪽 마진 위치 -->
+                <line x1="0" y1="335" x2="330" y2="335" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow)" />
+                <text x="0" y="360" font-size="14" font-weight="bold" fill="#64748b" text-anchor="middle">0</text>
+                <text x="150" y="360" font-size="14" font-weight="bold" fill="#64748b" text-anchor="middle">150</text>
+                <text x="300" y="360" font-size="14" font-weight="bold" fill="#64748b" text-anchor="middle">300</text>
+                <text x="330" y="325" font-size="14" font-weight="bold" fill="#64748b" text-anchor="end">X (mm)</text>
                 
-                <!-- 0점 및 끝단 라벨 -->
-                <text x="135" y="165" font-size="14" font-weight="bold" fill="#64748b">0</text>
-                <text x="320" y="138" font-size="16" font-weight="bold" fill="#64748b" text-anchor="end">X(mm)</text>
-                <text x="160" y="-15" font-size="16" font-weight="bold" fill="#64748b" text-anchor="start">Y(mm)</text>
+                <!-- Y 축 (0 ~ 300) 왼쪽 마진 위치 (SVG 특성상 Y는 아래에서 위로) -->
+                <line x1="-35" y1="300" x2="-35" y2="-30" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow)" />
+                <text x="-50" y="300" font-size="14" font-weight="bold" fill="#64748b" text-anchor="end" dominant-baseline="central">0</text>
+                <text x="-50" y="150" font-size="14" font-weight="bold" fill="#64748b" text-anchor="end" dominant-baseline="central">150</text>
+                <text x="-50" y="0" font-size="14" font-weight="bold" fill="#64748b" text-anchor="end" dominant-baseline="central">300</text>
+                <text x="-15" y="-30" font-size="14" font-weight="bold" fill="#64748b" text-anchor="start" dominant-baseline="central">Y (mm)</text>
                 
                 <g id="ref-points-group"></g>
               </svg>
@@ -464,8 +467,9 @@
 
 
     // ==========================================
-    // PPT Export (디자인 깎기 완벽 적용)
+    // PPT Export (다중 샘플 동적 SVG 캡처 로직 추가)
     // ==========================================
+    
     function svgToBase64(svgElement) {
       return new Promise((resolve, reject) => {
         const scale = 3; 
@@ -492,6 +496,33 @@
       });
     }
 
+    // 백그라운드에서 특정 샘플의 웨이퍼 맵을 SVG 문자열로 임시 생성 후 Base64로 추출
+    async function createSampleWaferBase64(sampleIdx) {
+      const tempSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      tempSvg.setAttribute("viewBox", "-10 -10 320 320");
+      tempSvg.innerHTML = `
+        <circle cx="150" cy="150" r="150" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"></circle>
+        <path d="M 145 300 L 155 300 L 150 295 Z" fill="#cbd5e1"></path>
+      `;
+
+      const pointSize = document.getElementById("point-size").value;
+      const textSize = document.getElementById("text-size").value;
+      const maxVal = parseFloat(document.getElementById("manual-max").value) || currentAutoMax;
+      const minVal = parseFloat(document.getElementById("manual-min").value) || currentAutoMin;
+
+      parsedData.forEach((pt) => {
+        const val = pt.values[sampleIdx];
+        if (val === null || val === undefined) return;
+        const color = getColorForValue(val, minVal, maxVal);
+        const svgY = 300 - pt.y; 
+
+        tempSvg.innerHTML += `<circle cx="${pt.x}" cy="${svgY}" r="${pointSize}" fill="${color}" stroke="#334155" stroke-width="0.5"></circle>`;
+        tempSvg.innerHTML += `<text x="${pt.x}" y="${svgY - parseInt(pointSize) - (parseInt(textSize) / 2) + 2}" font-size="${textSize}px" font-weight="800" fill="#0f172a" text-anchor="middle" stroke="rgba(255,255,255,0.9)" stroke-width="3px" paint-order="stroke">${val.toFixed(1)}</text>`;
+      });
+
+      return await svgToBase64(tempSvg);
+    }
+
     async function generatePPT() {
       const btn = document.getElementById("btn-ppt-generate");
       btn.innerText = "생성 중...";
@@ -504,77 +535,74 @@
         let pres = new PptxGenJS();
         pres.layout = "LAYOUT_16x9";
         
-        // --- 1. 마스터 슬라이드 정의 (전체 프레임 통일감) ---
+        // 1. 마스터 슬라이드 템플릿
         pres.defineSlideMaster({
           title: "REPORT_MASTER",
           background: { color: "FFFFFF" },
           objects: [
-            { rect: { x: 0, y: 0, w: "100%", h: 0.15, fill: "1e3a8a" } }, // 최상단 다크블루 띠
-            { line: { x: 0.5, y: 5.2, w: 9.0, h: 0, line: { color: "cbd5e1", width: 1 } } }, // 하단 푸터선
-            { text: { text: "인프라품질분석팀", options: { x: 0.5, y: 5.3, w: 3, h: 0.3, fontFace: "맑은 고딕", fontSize: 10, color: "94a3b8" } } },
-            { text: { text: "", options: { x: 8.5, y: 5.3, w: 1, h: 0.3, fontFace: "맑은 고딕", fontSize: 10, color: "94a3b8", align: "right" } } } // SlideNumber용 여백
+            { rect: { x: 0, y: 0, w: "100%", h: 0.15, fill: "1e3a8a" } }, 
+            { line: { x: 0.5, y: 5.2, w: 9.0, h: 0, line: { color: "cbd5e1", width: 1 } } }, 
+            { text: { text: "인프라품질분석팀", options: { x: 0.5, y: 5.3, w: 3, h: 0.3, fontFace: "맑은 고딕", fontSize: 10, color: "94a3b8" } } }
           ],
           slideNumber: { x: 9.0, y: 5.3, color: "94a3b8", fontFace: "맑은 고딕", fontSize: 10 }
         });
 
-        // --- 2. 표지 (Cover) ---
+        // 2. 표지
         let slide1 = pres.addSlide({ masterName: "REPORT_MASTER" });
         slide1.addText(title, { x: 1, y: 2.2, w: 8, h: 1.5, fontSize: 34, fontFace: "맑은 고딕", bold: true, color: "1e3a8a", align: "center", valign: "middle" });
-        slide1.addShape(pres.ShapeType.rect, { x: 4.5, y: 3.8, w: 1.0, h: 0.05, fill: "3b82f6" }); // 장식용 포인트 바
+        slide1.addShape(pres.ShapeType.rect, { x: 4.5, y: 3.8, w: 1.0, h: 0.05, fill: "3b82f6" }); 
         slide1.addText(`측정일자 : ${date}\n부서명 : 인프라품질분석팀`, { x: 1, y: 4.0, w: 8, h: 1.0, fontSize: 14, fontFace: "맑은 고딕", color: "475569", align: "center", lineSpacing: 25 });
         
-        const mainSvg = document.getElementById("wafer-svg");
         const refSvg = document.getElementById("ref-wafer");
-        const mainImgB64 = await svgToBase64(mainSvg);
         const refImgB64 = await svgToBase64(refSvg);
         
-        // --- 3. 분석 결과 (대시보드 레이아웃) ---
-        let slide2 = pres.addSlide({ masterName: "REPORT_MASTER" });
-        slide2.addShape(pres.ShapeType.rect, { x: 0.5, y: 0.4, w: 0.08, h: 0.35, fill: "3b82f6" }); 
-        slide2.addText("Analysis Result", { x: 0.65, y: 0.4, w: 5, h: 0.35, fontSize: 22, fontFace: "Arial", bold: true, color: "0f172a" });
-        slide2.addText(`분석 제목 : ${title}   |   측정 일자 : ${date}`, { x: 0.5, y: 0.85, w: 9, h: 0.3, fontSize: 11, fontFace: "맑은 고딕", color: "64748b" });
-        
-        // 맵 & 참고도 프레임
-        slide2.addShape(pres.ShapeType.rect, { x: 0.5, y: 1.3, w: 3.5, h: 3.5, fill: "ffffff", line: { color: "e2e8f0", width: 1 } });
-        slide2.addText("Current Wafer Map", { x: 0.5, y: 1.3, w: 3.5, h: 0.4, fontSize: 11, fontFace: "Arial", bold: true, color: "1e293b", fill: "f8fafc", align: "center" });
-        slide2.addImage({ data: mainImgB64, x: 0.6, y: 1.7, w: 3.3, h: 3.0 });
-        
-        slide2.addShape(pres.ShapeType.rect, { x: 4.2, y: 1.3, w: 2.8, h: 2.8, fill: "ffffff", line: { color: "e2e8f0", width: 1 } });
-        slide2.addText("Reference Axis", { x: 4.2, y: 1.3, w: 2.8, h: 0.4, fontSize: 11, fontFace: "Arial", bold: true, color: "1e293b", fill: "f8fafc", align: "center" });
-        slide2.addImage({ data: refImgB64, x: 4.3, y: 1.7, w: 2.6, h: 2.3 });
-        
-        // *핵심* 모든 샘플 종합 요약 테이블
-        let summaryTable = [
-          [{ text: "Sample", options: { fill: "f1f5f9", bold: true } }, { text: "AVE", options: { fill: "f1f5f9", bold: true } }, { text: "SD", options: { fill: "f1f5f9", bold: true } }, { text: "%RSD", options: { fill: "f1f5f9", bold: true } }]
-        ];
-        sampleNames.forEach((name, sIdx) => {
-           const validVals = parsedData.map(pt => pt.values[sIdx]).filter(v => v !== null && v !== undefined);
-           const stats = calcStats(validVals);
-           summaryTable.push([name, stats.ave, stats.sd, stats.rsd !== "-" ? stats.rsd + "%" : "-"]);
-        });
-        // 우측 하단에 종합 요약표 배치
-        slide2.addTable(summaryTable, { 
-          x: 7.2, y: 1.3, w: 2.3, 
-          colW: [0.8, 0.5, 0.5, 0.5], 
-          fontFace: "맑은 고딕", fontSize: 10, align: "center", valign: "middle", 
-          border: { pt: 0.5, color: "cbd5e1" } 
-        });
+        // 3. 다이내믹 맵 슬라이드 (4개 단위로 슬라이드 쪼개기)
+        for (let i = 0; i < sampleNames.length; i++) {
+          let slide;
+          // 첫 번째 슬라이드거나, 4개마다 새 슬라이드 추가
+          if (i % 4 === 0) {
+            slide = pres.addSlide({ masterName: "REPORT_MASTER" });
+            slide.addShape(pres.ShapeType.rect, { x: 0.5, y: 0.4, w: 0.08, h: 0.35, fill: "3b82f6" }); 
+            slide.addText("Analysis Result (Map View)", { x: 0.65, y: 0.4, w: 7, h: 0.35, fontSize: 22, fontFace: "Arial", bold: true, color: "0f172a" });
+            slide.addText(`분석 제목 : ${title}   |   측정 일자 : ${date}`, { x: 0.5, y: 0.85, w: 9, h: 0.3, fontSize: 11, fontFace: "맑은 고딕", color: "64748b" });
+            
+            // 좌측: 레퍼런스 맵 및 코멘트 박스 고정
+            slide.addShape(pres.ShapeType.rect, { x: 0.5, y: 1.3, w: 2.8, h: 2.7, fill: "ffffff", line: { color: "e2e8f0", width: 1 } });
+            slide.addText("분석 위치 참고도", { x: 0.5, y: 1.3, w: 2.8, h: 0.4, fontSize: 11, fontFace: "맑은 고딕", bold: true, color: "1e293b", fill: "f8fafc", align: "center" });
+            slide.addImage({ data: refImgB64, x: 0.65, y: 1.6, w: 2.5, h: 2.3 });
 
-        // 조건 & 코멘트 박스
-        slide2.addShape(pres.ShapeType.rect, { x: 4.2, y: 4.2, w: 5.3, h: 0.6, fill: "f8fafc", line: { color: "e2e8f0", width: 1 } });
-        slide2.addText("Drop Liquid :                                |     오차 범위 : ± 2°", { 
-          x: 4.3, y: 4.2, w: 5.1, h: 0.6, fontSize: 11, fontFace: "맑은 고딕", color: "334155", valign: "middle" 
-        });
-        
-        slide2.addShape(pres.ShapeType.rect, { x: 0.5, y: 5.5, w: 9.0, h: 1.5, fill: "f8fafc", line: { color: "e2e8f0", width: 1 } });
-        slide2.addText("분석의견 : ", { 
-          x: 0.6, y: 5.6, w: 8.8, h: 1.3, fontSize: 12, fontFace: "맑은 고딕", bold: true, color: "0f172a", valign: "top"
-        });
+            slide.addShape(pres.ShapeType.rect, { x: 0.5, y: 4.1, w: 2.8, h: 1.0, fill: "f8fafc", line: { color: "e2e8f0", width: 1 } });
+            slide.addText("Drop Liquid :\n\n오차 범위 : ± 2°", { x: 0.6, y: 4.2, w: 2.6, h: 0.8, fontSize: 11, fontFace: "맑은 고딕", color: "334155", valign: "top" });
+          } else {
+            // 현재 활성화된 슬라이드 선택
+            slide = pres.slides[pres.slides.length - 1];
+          }
 
-        // --- 4. Raw Data (데이터 표 슬라이드) ---
-        let slide3 = pres.addSlide({ masterName: "REPORT_MASTER" });
-        slide3.addShape(pres.ShapeType.rect, { x: 0.5, y: 0.4, w: 0.08, h: 0.35, fill: "3b82f6" }); 
-        slide3.addText("Raw Data & Statistics", { x: 0.65, y: 0.4, w: 6, h: 0.35, fontSize: 22, fontFace: "Arial", bold: true, color: "0f172a" });
+          // 샘플 맵 생성 및 배치 (우측 2x2 그리드 배열)
+          const imgB64 = await createSampleWaferBase64(i);
+          const validVals = parsedData.map(pt => pt.values[i]).filter(v => v !== null && v !== undefined);
+          const stats = calcStats(validVals);
+          
+          // 그리드 위치 계산 (i = 0,1,2,3 -> col:0,1 row:0,1)
+          const col = (i % 4) % 2;
+          const row = Math.floor((i % 4) / 2);
+          const xBase = 3.5 + (col * 3.1);
+          const yBase = 1.3 + (row * 1.9);
+
+          // 프레임 박스
+          slide.addShape(pres.ShapeType.rect, { x: xBase, y: yBase, w: 2.9, h: 1.8, fill: "ffffff", line: { color: "e2e8f0", width: 1 } });
+          // 상단 타이틀 (샘플 이름)
+          slide.addText(sampleNames[i], { x: xBase, y: yBase, w: 2.9, h: 0.3, fontSize: 11, fontFace: "맑은 고딕", bold: true, color: "ffffff", fill: "1e3a8a", align: "center" });
+          // 하단 통계 수치 바 (AVE, SD, %RSD)
+          slide.addText(`AVE: ${stats.ave} | SD: ${stats.sd} | %RSD: ${stats.rsd}%`, { x: xBase, y: yBase + 1.5, w: 2.9, h: 0.3, fontSize: 9, fontFace: "Arial", bold: true, color: "1e293b", fill: "f1f5f9", align: "center" });
+          // 웨이퍼 이미지
+          slide.addImage({ data: imgB64, x: xBase + 0.8, y: yBase + 0.32, w: 1.25, h: 1.15 });
+        }
+
+        // 4. Raw Data (데이터 표 슬라이드)
+        let slideData = pres.addSlide({ masterName: "REPORT_MASTER" });
+        slideData.addShape(pres.ShapeType.rect, { x: 0.5, y: 0.4, w: 0.08, h: 0.35, fill: "3b82f6" }); 
+        slideData.addText("Raw Data & Statistics", { x: 0.65, y: 0.4, w: 6, h: 0.35, fontSize: 22, fontFace: "Arial", bold: true, color: "0f172a" });
         
         let tableData = [];
         let headerRow = ["Point No.", "X (mm)", "Y (mm)", ...sampleNames];
@@ -604,8 +632,7 @@
         
         let colW = [1, 1, 1];
         sampleNames.forEach(() => colW.push(6 / sampleNames.length));
-        // 슬라이드 폭(10) 안에 딱 맞게 조정 (x:0.5, w:9.0)
-        slide3.addTable(tableData, { x: 0.5, y: 1.0, w: 9.0, colW: colW, border: { pt: 0.5, color: "cbd5e1" } });
+        slideData.addTable(tableData, { x: 0.5, y: 1.0, w: 9.0, colW: colW, border: { pt: 0.5, color: "cbd5e1" } });
         
         pres.writeFile({ fileName: `${title}.pptx` });
         closePptModal();
