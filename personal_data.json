@@ -1,15 +1,6 @@
 {
   "todos": [
     {
-      "id": 1793671211281,
-      "date": "2026-11-03",
-      "text": "ㅇㄴㅅ",
-      "isAllDay": false,
-      "timeType": "deadline",
-      "time": "01:01",
-      "completed": false
-    },
-    {
       "id": 1793671894326,
       "date": "2026-11-26",
       "text": "밍갬생일",
