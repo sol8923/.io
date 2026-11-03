@@ -11,11 +11,5 @@
       "completed": false
     }
   ],
-  "memos": [
-    {
-      "id": 1793670346453,
-      "text": "메모",
-      "timestamp": 1793670346453
-    }
-  ]
+  "memos": []
 }
