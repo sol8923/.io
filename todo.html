@@ -36,19 +36,22 @@
     
     .cal-cell { border: 1px solid #ddd; border-radius: 4px; height: 110px; padding: 5px; text-align: left; display: flex; flex-direction: column; overflow-y: auto; background: white; cursor: pointer; transition: border-color 0.2s; }
     .cal-cell:hover { border-color: #1a73e8; background: #f8f9fa; }
-    .cal-cell .date-num { font-weight: bold; font-size: 14px; margin-bottom: 5px; display: block; pointer-events: none; }
+    .cal-cell .date-num { font-weight: bold; font-size: 14px; margin-bottom: 2px; display: block; pointer-events: none; }
     .cal-cell.sun .date-num { color: red; }
     .cal-cell.sat .date-num { color: blue; }
+    .cal-cell.holiday .date-num { color: red; }
     .cal-cell.today { border: 2px solid #1a73e8; background: #e8f0fe; }
     
-    .cal-event { font-size: 11px; background: #d4edda; border-left: 3px solid #28a745; padding: 4px; margin-bottom: 3px; border-radius: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; transition: background 0.2s; }
+    .holiday-name { font-size: 11px; color: red; font-weight: bold; margin-bottom: 3px; pointer-events: none; }
+
+    .cal-event { font-size: 11px; padding: 4px; margin-bottom: 3px; border-radius: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; transition: filter 0.2s; color: #333; }
     .cal-event:hover { filter: brightness(0.95); }
-    .cal-event.completed { background: #e2e3e5; border-color: #6c757d; text-decoration: line-through; color: #666; }
-    .event-time-badge { font-weight: bold; color: #155724; margin-right: 4px; }
-    .completed .event-time-badge { color: #666; }
+    .cal-event.completed { background: #e2e3e5 !important; border-color: #6c757d !important; text-decoration: line-through; color: #888 !important; }
+    .event-time-badge { font-weight: bold; margin-right: 4px; }
+    .completed .event-time-badge { color: #888 !important; }
 
     /* ========== [탭 2] 할 일 입력 및 목록 ========== */
-    .todo-input-wrap { background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px; }
+    .todo-input-wrap { background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 20px; display: flex; flex-direction: column; gap: 12px; }
     .todo-row-1 { display: flex; align-items: center; gap: 15px; }
     .todo-row-2 { display: flex; align-items: center; gap: 10px; }
     
@@ -56,15 +59,22 @@
     .todo-input-wrap input[type="text"] { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
     .checkbox-wrap { display: flex; align-items: center; gap: 5px; font-size: 14px; font-weight: bold; cursor: pointer; }
     
+    /* 색상 팔레트 스타일 */
+    .color-palette-wrap { display: flex; align-items: center; gap: 10px; margin-left: 10px; border-left: 2px solid #ddd; padding-left: 15px; }
+    .palette-label { font-size: 13px; font-weight: bold; color: #555; }
+    .color-swatch { width: 22px; height: 22px; border-radius: 50%; cursor: pointer; transition: transform 0.2s; box-sizing: border-box; }
+    .color-swatch:hover { transform: scale(1.1); }
+    .color-swatch.active { border: 2px solid #333; transform: scale(1.2); box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+
     .btn-add { background: #28a745; color: white; border: none; padding: 10px 25px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 14px; }
     .btn-add:hover { background: #218838; }
     .btn-cancel { background: #6c757d; color: white; border: none; padding: 10px 15px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 14px; display: none; }
 
     .todo-list { list-style: none; padding: 0; margin: 0; }
-    .todo-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; border-bottom: 1px solid #eee; transition: background 0.2s; }
+    .todo-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; border-bottom: 1px solid #eee; transition: background 0.2s; background: white; margin-bottom: 5px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
     .todo-item:hover { background: #f8f9fa; }
     .todo-info { display: flex; align-items: center; gap: 12px; }
-    .todo-date { font-size: 12px; background: #17a2b8; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold; text-align: center; }
+    .todo-date { font-size: 12px; background: #17a2b8; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold; text-align: center; min-width: 65px; }
     .todo-text { font-size: 15px; font-weight: 500; }
     .todo-item.completed .todo-text { text-decoration: line-through; color: #999; }
     
@@ -138,6 +148,12 @@
           <option value="deadline">종료 기한</option>
         </select>
         <input type="time" id="todo-time" style="display:none;">
+        
+        <!-- [추가됨] 10가지 색상 팔레트 -->
+        <div class="color-palette-wrap">
+          <span class="palette-label">색상:</span>
+          <div id="color-palette-container" style="display:flex; gap:6px;"></div>
+        </div>
       </div>
       <div class="todo-row-2">
         <input type="text" id="todo-text" placeholder="업무 내용 입력 (Enter 저장)" onkeypress="if(event.key==='Enter') saveTodo()">
@@ -196,9 +212,53 @@
     let editingTodoId = null;
     let editingMemoId = null;
 
+    // [추가됨] 10가지 예쁜 파스텔 색상표 (배경색과 좌측 테두리색)
+    const TODO_COLORS = [
+      { bg: "#d4edda", bd: "#28a745" }, // 0: 초록 (기본)
+      { bg: "#f8d7da", bd: "#dc3545" }, // 1: 빨강
+      { bg: "#fff3cd", bd: "#ffc107" }, // 2: 노랑
+      { bg: "#d1ecf1", bd: "#17a2b8" }, // 3: 파랑
+      { bg: "#e2e3e5", bd: "#6c757d" }, // 4: 회색
+      { bg: "#e8dbff", bd: "#6f42c1" }, // 5: 보라
+      { bg: "#ffe5d9", bd: "#d9734e" }, // 6: 코랄
+      { bg: "#cce3de", bd: "#6b9080" }, // 7: 민트
+      { bg: "#fcd5ce", bd: "#f08080" }, // 8: 핑크
+      { bg: "#fff1e6", bd: "#dda15e" }  // 9: 베이지
+    ];
+    let selectedColorIdx = 0; // 현재 선택된 색상
+
+    // [추가됨] 한국 공휴일 데이터
+    const fixedHolidays = {
+      "01-01": "신정", "03-01": "삼일절", "05-05": "어린이날", "06-06": "현충일",
+      "08-15": "광복절", "10-03": "개천절", "10-09": "한글날", "12-25": "기독탄신일"
+    };
+    const yearlyHolidays = {
+      "2026-02-16": "설날 연휴", "2026-02-17": "설날", "2026-02-18": "설날 연휴",
+      "2026-03-02": "대체공휴일", "2026-05-24": "부처님오신날", "2026-05-25": "대체공휴일",
+      "2026-08-17": "대체공휴일", "2026-09-24": "추석 연휴", "2026-09-25": "추석", "2026-09-26": "추석 연휴",
+      "2027-02-06": "설날 연휴", "2027-02-07": "설날", "2027-02-08": "설날 연휴", "2027-02-09": "대체공휴일",
+      "2027-05-13": "부처님오신날", "2027-09-14": "추석 연휴", "2027-09-15": "추석", "2027-09-16": "추석 연휴"
+    };
+
     const savedToken = localStorage.getItem("calendar_github_token");
     if (savedToken) document.getElementById("github-token").value = savedToken;
     document.getElementById("todo-date").value = getYYYYMMDD(new Date());
+
+    // 색상 팔레트 화면 렌더링
+    function renderColorPalette() {
+      const container = document.getElementById('color-palette-container');
+      container.innerHTML = TODO_COLORS.map((c, i) => `
+        <div class="color-swatch ${i === selectedColorIdx ? 'active' : ''}" 
+             style="background: ${c.bg}; border-color: ${i === selectedColorIdx ? '#333' : 'transparent'};" 
+             onclick="selectColor(${i})">
+        </div>
+      `).join('');
+    }
+
+    function selectColor(idx) {
+      selectedColorIdx = idx;
+      renderColorPalette();
+    }
 
     function switchTab(tabId, btnEl) {
       document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
@@ -243,13 +303,7 @@
       }
 
       if (!appData.todos) appData.todos = [];
-      if (!appData.memos) {
-        appData.memos = [];
-        if (typeof appData.memo === 'string' && appData.memo.trim() !== "") {
-          appData.memos.push({ id: Date.now(), text: appData.memo, timestamp: Date.now() });
-        }
-        delete appData.memo;
-      }
+      if (!appData.memos) appData.memos = [];
 
       refreshAllViews();
     }
@@ -325,6 +379,7 @@
           t.isAllDay = isAllDay;
           t.timeType = timeType;
           t.time = timeVal;
+          t.colorIdx = selectedColorIdx; // 색상 저장
         }
       } else {
         appData.todos.push({
@@ -334,6 +389,7 @@
           isAllDay: isAllDay,
           timeType: timeType,
           time: timeVal,
+          colorIdx: selectedColorIdx, // 색상 저장
           completed: false
         });
       }
@@ -357,6 +413,10 @@
       document.getElementById("todo-time-type").value = t.timeType || 'start';
       document.getElementById("todo-time").value = t.time || '';
       
+      // 저장된 색상 불러오기 (기존 데이터는 0번 색상)
+      selectedColorIdx = t.colorIdx || 0;
+      renderColorPalette();
+      
       toggleTimeInput();
       document.getElementById("btn-todo-save").innerText = "수정 완료";
       document.getElementById("btn-todo-cancel").style.display = "inline-block";
@@ -368,6 +428,11 @@
       document.getElementById("todo-text").value = "";
       document.getElementById("todo-allday").checked = true;
       document.getElementById("todo-time").value = "";
+      
+      // 색상 초기화
+      selectedColorIdx = 0;
+      renderColorPalette();
+
       toggleTimeInput();
       document.getElementById("btn-todo-save").innerText = "항목 추가";
       document.getElementById("btn-todo-cancel").style.display = "none";
@@ -405,8 +470,8 @@
       sorted.forEach(t => {
         const isPast = t.date < getYYYYMMDD(new Date()) && !t.completed;
         const dateStyle = isPast ? "background: #dc3545;" : ""; 
+        const c = TODO_COLORS[t.colorIdx || 0]; // 선택한 색상 가져오기
 
-        // [수정됨] 할 일 목록의 시간 뱃지 표기
         let timeLabel = "";
         if (t.isAllDay !== false) {
           timeLabel = "종일";
@@ -415,8 +480,9 @@
           timeLabel = `${t.time} ${suffix}`;
         }
 
+        // 띠(좌측 보더) 색상을 선택한 색상(bd)으로 지정
         const li = `
-          <li class="todo-item ${t.completed ? 'completed' : ''}">
+          <li class="todo-item ${t.completed ? 'completed' : ''}" style="border-left: 4px solid ${c.bd};">
             <div class="todo-info">
               <span class="todo-date" style="${dateStyle}">${t.date.substring(5).replace('-', '/')}<br><span style="font-size:10px; font-weight:normal;">${timeLabel}</span></span>
               <span class="todo-text">${t.text}</span>
@@ -450,6 +516,7 @@
 
       for(let i=1; i<=lastDate; i++) {
         const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+        const monthDayStr = `${String(month+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
         const dayOfWeek = new Date(year, month, i).getDay();
         
         let cellClass = "cal-cell";
@@ -457,23 +524,34 @@
         if (dayOfWeek === 6) cellClass += " sat";
         if (dateStr === todayStr) cellClass += " today";
 
+        // [추가됨] 공휴일 렌더링 로직
+        let holidayName = yearlyHolidays[dateStr] || fixedHolidays[monthDayStr];
+        let holidayHtml = holidayName ? `<div class="holiday-name">${holidayName}</div>` : "";
+        if (holidayName) cellClass += " holiday";
+
         const dayTodos = appData.todos.filter(t => t.date === dateStr);
         let eventsHtml = "";
         
         dayTodos.forEach(t => {
           const compClass = t.completed ? "completed" : "";
+          const c = TODO_COLORS[t.colorIdx || 0]; // 선택한 색상 가져오기
           let timeBadge = "";
-          // [수정됨] 달력의 시간 뱃지 표기 로직
+          
           if (t.isAllDay === false) {
              const suffix = t.timeType === 'deadline' ? '까지' : '부터';
-             timeBadge = `<span class="event-time-badge">[${t.time} ${suffix}]</span>`;
+             timeBadge = `<span class="event-time-badge" style="color: ${c.bd};">[${t.time} ${suffix}]</span>`;
           }
-          eventsHtml += `<div class="cal-event ${compClass}" onclick="handleEventClick(event, ${t.id})" title="${t.text}">${timeBadge} ${t.text}</div>`;
+          
+          // 배경색과 보더색을 선택한 색상으로 칠함
+          const inlineStyle = `background-color: ${c.bg}; border-left: 3px solid ${c.bd};`;
+          
+          eventsHtml += `<div class="cal-event ${compClass}" style="${inlineStyle}" onclick="handleEventClick(event, ${t.id})" title="${t.text}">${timeBadge} ${t.text}</div>`;
         });
 
         grid.innerHTML += `
           <div class="${cellClass}" onclick="handleCellClick('${dateStr}')">
             <span class="date-num">${i}</span>
+            ${holidayHtml}
             ${eventsHtml}
           </div>
         `;
@@ -594,6 +672,8 @@
     function openSettings() { document.getElementById('settings-modal').style.display = 'flex'; }
     function closeSettings() { document.getElementById('settings-modal').style.display = 'none'; fetchData(); }
 
+    // 페이지 시작 시 팔레트 생성 및 데이터 로딩
+    renderColorPalette();
     fetchData();
   </script>
 </body>
