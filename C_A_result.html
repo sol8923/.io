@@ -50,7 +50,7 @@
     svg.wafer-svg { width: 100%; max-width: 550px; height: auto; display: block; overflow: visible; }
     .point-val-text { font-weight: 800; fill: #0f172a; text-anchor: middle; paint-order: stroke; stroke: rgba(255,255,255,0.9); stroke-width: 3px; pointer-events: none; }
 
-    /* Map Right Panel (Reference Map) */
+    /* Map Right Panel */
     .map-right { width: 320px; flex-shrink: 0; display: flex; flex-direction: column; gap: 15px; }
     .legend-container { display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid var(--border-color); border-radius: 4px; padding: 15px; }
     .legend-bar { flex: 1; height: 12px; border-radius: 2px; border: 1px solid #cbd5e1; margin: 0 10px; background: linear-gradient(to right, hsl(210, 80%, 90%), hsl(210, 80%, 30%)); }
@@ -464,7 +464,7 @@
 
 
     // ==========================================
-    // PPT Export (세로형 스택 레이아웃 & 1페이지 락(Lock) 적용판)
+    // PPT Export (디자인, 락 핏팅, 바텀 풀 스케일 적용)
     // ==========================================
     
     function svgToBase64(svgElement) {
@@ -553,23 +553,20 @@
         const refSvg = document.getElementById("ref-wafer");
         const refImgB64 = await svgToBase64(refSvg);
         
-        // 3. [페이지 2] Raw Data (1페이지 강제 핏), Reference Map, 조건/코멘트 (2분할 레이아웃)
+        // 3. [페이지 2] Raw Data (우측), Reference Map (좌측), 코멘트 (바텀 100%)
         let slideData = pres.addSlide({ masterName: "REPORT_MASTER" });
         slideData.addShape(pres.ShapeType.rect, { x: 0.3, y: 0.35, w: 0.08, h: 0.35, fill: "0c4a9e" }); 
         slideData.addText("Raw Data & Analysis Conditions", { x: 0.45, y: 0.35, w: 6, h: 0.35, fontSize: 20, fontFace: "Arial", bold: true, color: "0f172a" });
         
-        // 좌측 (기둥 배치: 참고도 -> 분석 조건 -> 코멘트)
-        slideData.addShape(pres.ShapeType.rect, { x: 0.3, y: 0.85, w: 2.3, h: 2.0, fill: "ffffff", line: { color: "e2e8f0", width: 1 } });
-        slideData.addText("분석 위치 참고도", { x: 0.3, y: 0.85, w: 2.3, h: 0.3, fontSize: 10, fontFace: "맑은 고딕", bold: true, color: "1e293b", fill: "f8fafc", align: "center" });
-        slideData.addImage({ data: refImgB64, x: 0.45, y: 1.15, w: 2.0, h: 1.6 });
+        // 좌측 프레임 (참고도, 조건)
+        slideData.addShape(pres.ShapeType.rect, { x: 0.3, y: 0.85, w: 3.0, h: 2.8, fill: "ffffff", line: { color: "e2e8f0", width: 1 } });
+        slideData.addText("분석 위치 참고도", { x: 0.3, y: 0.85, w: 3.0, h: 0.35, fontSize: 11, fontFace: "맑은 고딕", bold: true, color: "1e293b", fill: "f8fafc", align: "center" });
+        slideData.addImage({ data: refImgB64, x: 0.5, y: 1.25, w: 2.6, h: 2.3 });
         
-        slideData.addShape(pres.ShapeType.rect, { x: 0.3, y: 2.95, w: 2.3, h: 0.9, fill: "f8fafc", line: { color: "e2e8f0", width: 1 } });
-        slideData.addText("Droplet Volume (μL) :\n\n오차 범위 : ± 2°", { x: 0.4, y: 3.05, w: 2.1, h: 0.7, fontSize: 10, fontFace: "맑은 고딕", color: "334155", valign: "top" });
+        slideData.addShape(pres.ShapeType.rect, { x: 0.3, y: 3.8, w: 3.0, h: 1.0, fill: "f8fafc", line: { color: "e2e8f0", width: 1 } });
+        slideData.addText("Droplet Volume (μL) :\n\n오차 범위 : ± 2°", { x: 0.45, y: 3.9, w: 2.7, h: 0.8, fontSize: 11, fontFace: "맑은 고딕", color: "334155", valign: "top" });
 
-        slideData.addShape(pres.ShapeType.rect, { x: 0.3, y: 3.95, w: 2.3, h: 1.15, fill: "f1f5f9", line: { color: "cbd5e1", width: 1 } });
-        slideData.addText("분석 의견 : ", { x: 0.4, y: 4.05, w: 2.1, h: 0.95, fontSize: 11, fontFace: "맑은 고딕", bold: true, color: "0f172a", valign: "top" });
-
-        // 우측 (Raw Data Table 1페이지 강제 핏)
+        // 우측 프레임 (데이터 표 - 1페이지 락을 위한 Micro-typography)
         let tableData = [];
         let headerRow = ["Point No.", "X (mm)", "Y (mm)", ...sampleNames];
         tableData.push(headerRow.map(text => ({ text: text, options: { fontFace: "맑은 고딕", bold: true, fill: "e2e8f0", align: "center", valign: "middle", fontSize: 6.5, margin: 0.02 } })));
@@ -596,23 +593,28 @@
         tableData.push(sdRow.map(v => ({ text: String(v), options: { fontFace: "Arial", bold: true, fill: "f8fafc", align: "center", valign: "middle", fontSize: 6.5, margin: 0.02 } })));
         tableData.push(rsdRow.map(v => ({ text: String(v), options: { fontFace: "Arial", bold: true, fill: "ffffff", align: "center", valign: "middle", fontSize: 6.5, margin: 0.02 } })));
         
-        let colW = [0.5, 0.5, 0.5]; 
-        const remainW = 7.0 - 1.5;
+        let colW = [0.4, 0.45, 0.45]; 
+        const remainW = 6.0;
         sampleNames.forEach(() => colW.push(remainW / sampleNames.length));
         
-        // autoPage: false 로 1페이지에 테이블을 모두 욱여넣음 (50포인트 거뜬히 수용)
-        slideData.addTable(tableData, { x: 2.7, y: 0.85, w: 7.0, colW: colW, border: { pt: 0.5, color: "cbd5e1" }, autoPage: false });
+        // 우측 상단부터 배치되며 표가 길어져도 프레임 아래를 넘지 않음 (autoPage: false)
+        slideData.addTable(tableData, { x: 3.5, y: 0.85, w: 6.2, colW: colW, border: { pt: 0.5, color: "cbd5e1" }, autoPage: false });
         
-        
-        // 4. [페이지 3~] 다중 샘플 Map View (텍스트 스택(Stack) 레이아웃으로 공백 제로화)
+        // 4. [페이지 3~] 다중 샘플 Map View (텍스트 스택 & 100% 바텀 코멘트)
         for (let i = 0; i < sampleNames.length; i++) {
           let slide;
-          // 한 페이지에 6개씩(3x2) 할당 
+          // 한 페이지에 6개씩(3x2)
           if (i % 6 === 0) {
             slide = pres.addSlide({ masterName: "REPORT_MASTER" });
             slide.addShape(pres.ShapeType.rect, { x: 0.3, y: 0.4, w: 0.08, h: 0.35, fill: "0c4a9e" }); 
             slide.addText("Wafer Mapping Results", { x: 0.45, y: 0.4, w: 7, h: 0.35, fontSize: 20, fontFace: "Arial", bold: true, color: "0f172a" });
             slide.addText(`분석 제목 : ${title}   |   측정 일자 : ${date}`, { x: 0.3, y: 0.85, w: 9, h: 0.3, fontSize: 11, fontFace: "맑은 고딕", color: "64748b" });
+            
+            // 맨 아래 "분석 의견" 란 (가로 전체 폭 점유, 남는 세로 공간 자동 꽉 채움)
+            // 3x2 배열 카드가 차지하는 y 공간: 1.25 ~ 4.25 (높이 3인치)
+            // 따라서 4.4부터 5.15까지 (높이 0.75)가 남음.
+            slide.addShape(pres.ShapeType.rect, { x: 0.3, y: 4.4, w: 9.4, h: 0.75, fill: "f8fafc", line: { color: "cbd5e1", width: 1 } });
+            slide.addText("분석 의견 : ", { x: 0.4, y: 4.45, w: 9.2, h: 0.65, fontSize: 12, fontFace: "맑은 고딕", bold: true, color: "0f172a", valign: "top" });
           } else {
             slide = pres.slides[pres.slides.length - 1];
           }
@@ -624,39 +626,36 @@
           const col = (i % 6) % 3;
           const row = Math.floor((i % 6) / 3);
           
-          const cardW = 3.0; // 카드 너비
-          const cardH = 2.15; // 카드 높이
-          const xBase = 0.3 + (col * 3.15); // 열 간격 0.15
-          const yBase = 0.9 + (row * 2.25); // 행 간격 0.1
+          const cardW = 3.05; // 3개 배열
+          const cardH = 1.45; // 이미지 1.2 기준 + 타이틀
+          const xBase = 0.3 + (col * 3.15); // 열 간격
+          const yBase = 1.25 + (row * 1.55); // 행 간격
 
-          // 모듈형 카드 프레임
           slide.addShape(pres.ShapeType.rect, { x: xBase, y: yBase, w: cardW, h: cardH, fill: "ffffff", line: { color: "e2e8f0", width: 1 } });
+          slide.addShape(pres.ShapeType.rect, { x: xBase, y: yBase, w: cardW, h: 0.2, fill: "1e3a8a" });
+          slide.addText(sampleNames[i], { x: xBase, y: yBase, w: cardW, h: 0.2, fontSize: 9, fontFace: "맑은 고딕", bold: true, color: "ffffff", align: "center" });
           
-          // 타이틀바
-          slide.addShape(pres.ShapeType.rect, { x: xBase, y: yBase, w: cardW, h: 0.25, fill: "1e3a8a" });
-          slide.addText(sampleNames[i], { x: xBase, y: yBase, w: cardW, h: 0.25, fontSize: 10, fontFace: "맑은 고딕", bold: true, color: "ffffff", align: "center" });
+          // 이미지 40% 대폭 확대 적용 (w:1.8)
+          slide.addImage({ data: imgB64, x: xBase + 0.05, y: yBase + 0.25, w: 1.8, h: 1.2 });
           
-          // 중앙 웨이퍼 이미지 (기존 w:1.25 -> 1.8 로 대폭 확대, 가로 공백 완전 제거)
-          slide.addImage({ data: imgB64, x: xBase + 0.05, y: yBase + 0.3, w: 1.8, h: 1.8 });
-          
-          // 우측 통계 스택 (AVE, SD, %RSD 세로 정렬)
+          // 우측 세로 통계 스택 
           const statX = xBase + 1.95;
-          const statW = 0.95;
+          const statW = 1.0;
 
           // AVE
-          slide.addShape(pres.ShapeType.rect, { x: statX, y: yBase + 0.4, w: statW, h: 0.15, fill: "f1f5f9" });
-          slide.addText("AVE", { x: statX, y: yBase + 0.4, w: statW, h: 0.15, fontSize: 7, fontFace: "Arial", bold: true, color: "64748b", align: "center" });
-          slide.addText(stats.ave, { x: statX, y: yBase + 0.55, w: statW, h: 0.25, fontSize: 11, fontFace: "Arial", bold: true, color: "1e293b", align: "center" });
+          slide.addShape(pres.ShapeType.rect, { x: statX, y: yBase + 0.25, w: statW, h: 0.15, fill: "f1f5f9" });
+          slide.addText("AVE", { x: statX, y: yBase + 0.25, w: statW, h: 0.15, fontSize: 8, fontFace: "Arial", bold: true, color: "64748b", align: "center" });
+          slide.addText(stats.ave, { x: statX, y: yBase + 0.4, w: statW, h: 0.25, fontSize: 13, fontFace: "Arial", bold: true, color: "1e293b", align: "center" });
 
           // SD
-          slide.addShape(pres.ShapeType.rect, { x: statX, y: yBase + 0.9, w: statW, h: 0.15, fill: "f1f5f9" });
-          slide.addText("SD", { x: statX, y: yBase + 0.9, w: statW, h: 0.15, fontSize: 7, fontFace: "Arial", bold: true, color: "64748b", align: "center" });
-          slide.addText(stats.sd, { x: statX, y: yBase + 1.05, w: statW, h: 0.25, fontSize: 11, fontFace: "Arial", bold: true, color: "1e293b", align: "center" });
+          slide.addShape(pres.ShapeType.rect, { x: statX, y: yBase + 0.65, w: statW, h: 0.15, fill: "f1f5f9" });
+          slide.addText("SD", { x: statX, y: yBase + 0.65, w: statW, h: 0.15, fontSize: 8, fontFace: "Arial", bold: true, color: "64748b", align: "center" });
+          slide.addText(stats.sd, { x: statX, y: yBase + 0.8, w: statW, h: 0.25, fontSize: 13, fontFace: "Arial", bold: true, color: "1e293b", align: "center" });
 
           // %RSD
-          slide.addShape(pres.ShapeType.rect, { x: statX, y: yBase + 1.4, w: statW, h: 0.15, fill: "f1f5f9" });
-          slide.addText("%RSD", { x: statX, y: yBase + 1.4, w: statW, h: 0.15, fontSize: 7, fontFace: "Arial", bold: true, color: "64748b", align: "center" });
-          slide.addText(stats.rsd !== "-" ? stats.rsd + "%" : "-", { x: statX, y: yBase + 1.55, w: statW, h: 0.25, fontSize: 11, fontFace: "Arial", bold: true, color: "1e293b", align: "center" });
+          slide.addShape(pres.ShapeType.rect, { x: statX, y: yBase + 1.05, w: statW, h: 0.15, fill: "f1f5f9" });
+          slide.addText("%RSD", { x: statX, y: yBase + 1.05, w: statW, h: 0.15, fontSize: 8, fontFace: "Arial", bold: true, color: "64748b", align: "center" });
+          slide.addText(stats.rsd !== "-" ? stats.rsd + "%" : "-", { x: statX, y: yBase + 1.2, w: statW, h: 0.25, fontSize: 13, fontFace: "Arial", bold: true, color: "1e293b", align: "center" });
         }
         
         pres.writeFile({ fileName: `${title}.pptx` });
