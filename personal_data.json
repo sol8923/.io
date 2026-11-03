@@ -8,6 +8,16 @@
       "timeType": "deadline",
       "time": "01:01",
       "completed": false
+    },
+    {
+      "id": 1793671894326,
+      "date": "2026-11-26",
+      "text": "밍갬생일",
+      "isAllDay": true,
+      "timeType": "start",
+      "time": "",
+      "colorIdx": 3,
+      "completed": false
     }
   ],
   "memos": [
