@@ -5,7 +5,22 @@
       "date": "2026-11-26",
       "text": "민겸 생일",
       "completed": false
+    },
+    {
+      "id": 1793670374753,
+      "date": "2026-11-18",
+      "text": "ㅅ",
+      "isAllDay": false,
+      "timeType": "deadline",
+      "time": "22:11",
+      "completed": false
     }
   ],
-  "memo": "메모"
+  "memos": [
+    {
+      "id": 1793670346453,
+      "text": "메모",
+      "timestamp": 1793670346453
+    }
+  ]
 }
