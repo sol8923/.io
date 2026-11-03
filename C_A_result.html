@@ -35,11 +35,11 @@
     .btn-exec { width: 100%; background: var(--primary); color: white; border: none; padding: 10px; border-radius: 4px; font-weight: 600; cursor: pointer; margin-top: 10px; transition: background 0.2s; }
     .btn-exec:hover { background: var(--primary-dark); }
 
-    /* 컨트롤 그룹 */
+    /* 컨트롤 그룹 (라벨 줄바꿈 방지 적용) */
     .control-group { display: flex; flex-direction: column; gap: 10px; }
-    .control-row { display: flex; justify-content: space-between; align-items: center; }
-    .control-row label { font-size: 12px; color: var(--text-muted); font-weight: 600; }
-    .control-row input[type="number"], .control-row select { width: 100px; padding: 5px 8px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 12px; font-family: inherit; }
+    .control-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .control-row label { font-size: 12px; color: var(--text-muted); font-weight: 600; white-space: nowrap; word-break: keep-all; }
+    .control-row input[type="number"], .control-row select { width: 110px; padding: 5px 8px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 12px; font-family: inherit; }
     .control-row input[type="range"] { width: 100px; }
 
     /* 우측: 메인 뷰 (탭 영역) */
@@ -56,7 +56,6 @@
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
     /* ========== [탭 1] 맵 뷰 (Map View) ========== */
-    /* 중앙 맵 패널 */
     .map-center { flex: 1; display: flex; flex-direction: column; gap: 15px; min-width: 450px; }
     
     .stats-bar { display: flex; gap: 15px; }
@@ -73,10 +72,10 @@
     .data-point { stroke: #334155; stroke-width: 0.5; transition: stroke-width 0.1s; cursor: crosshair; }
     .data-point:hover { stroke: #0f172a; stroke-width: 2; }
     
-    /* 값 표시 텍스트 스타일 (가독성을 위한 Stroke 처리) */
-    .point-val-text { font-size: 10px; font-weight: 800; fill: #0f172a; text-anchor: middle; paint-order: stroke; stroke: rgba(255,255,255,0.9); stroke-width: 3px; pointer-events: none; }
+    /* 값 표시 텍스트 스타일 (크기는 자바스크립트에서 제어) */
+    .point-val-text { font-weight: 800; fill: #0f172a; text-anchor: middle; paint-order: stroke; stroke: rgba(255,255,255,0.9); stroke-width: 3px; pointer-events: none; }
 
-    /* 우측 보조 패널 (레퍼런스 & 범례) */
+    /* 우측 보조 패널 */
     .map-right { width: 260px; flex-shrink: 0; display: flex; flex-direction: column; gap: 15px; }
     
     .legend-container { display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid var(--border-color); border-radius: 4px; padding: 15px; }
@@ -89,22 +88,23 @@
     .ref-point { fill: #cbd5e1; stroke: #64748b; stroke-width: 1; }
     .ref-text { font-size: 14px; font-weight: 900; fill: #0f172a; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
 
-    /* 툴팁 */
     #tooltip { position: absolute; background: rgba(15, 23, 42, 0.9); color: white; padding: 6px 10px; border-radius: 4px; font-size: 11px; pointer-events: none; opacity: 0; transition: opacity 0.1s; z-index: 100; font-family: monospace; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
 
     /* ========== [탭 2] 데이터 표 (Table View) ========== */
+    .table-top-bar { display: flex; justify-content: flex-end; padding-bottom: 10px; }
+    .unit-label { font-size: 12px; font-weight: bold; color: var(--text-muted); background: #f8fafc; padding: 4px 10px; border-radius: 4px; border: 1px solid var(--border-color); }
+    
     .table-container { width: 100%; background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); overflow: auto; max-height: 750px; }
-    .data-table { width: 100%; border-collapse: collapse; text-align: right; font-size: 13px; }
-    .data-table th, .data-table td { border: 1px solid var(--border-color); padding: 10px 15px; }
-    .data-table th { background: #f1f5f9; color: var(--text-main); font-weight: bold; text-align: center; position: sticky; top: 0; z-index: 1; }
-    .data-table th.left-align, .data-table td.left-align { text-align: center; }
+    .data-table { width: 100%; border-collapse: collapse; text-align: center; font-size: 13px; }
+    .data-table th, .data-table td { border: 1px solid var(--border-color); padding: 10px 15px; text-align: center; } /* 가운데 정렬 */
+    .data-table th { background: #f1f5f9; color: var(--text-main); font-weight: bold; position: sticky; top: 0; z-index: 1; }
     .data-table tbody tr:hover { background: #f8fafc; }
     
-    /* 테이블 통계 푸터 (Footer) */
-    .data-table tfoot th { background: #e2e8f0; font-weight: bold; color: var(--text-main); position: sticky; bottom: 0; }
-    .data-table tfoot tr.stat-row-ave th { background: #dbeafe; color: #1e3a8a; }
-    .data-table tfoot tr.stat-row-sd th { background: #e0e7ff; color: #3730a3; }
-    .data-table tfoot tr.stat-row-rsd th { background: #ede9fe; color: #5b21b6; }
+    /* 테이블 통계 푸터 (전문성 강화 - 무채색 톤) */
+    .data-table tfoot th { font-weight: bold; color: var(--text-main); position: sticky; bottom: 0; border-top: 2px solid #cbd5e1; }
+    .data-table tfoot tr.stat-row-ave th { background: #f1f5f9; color: #1e293b; }
+    .data-table tfoot tr.stat-row-sd th { background: #f8fafc; color: #334155; }
+    .data-table tfoot tr.stat-row-rsd th { background: #ffffff; color: #475569; }
   </style>
 </head>
 <body>
@@ -135,7 +135,11 @@
           <hr style="border: 0; border-top: 1px solid #e5e7eb; width: 100%; margin: 5px 0;">
           <div class="control-row">
             <label>Point 크기</label>
-            <input type="range" id="point-size" min="4" max="25" value="8" oninput="renderWaferMap()">
+            <input type="range" id="point-size" min="1" max="25" value="8" oninput="renderWaferMap()">
+          </div>
+          <div class="control-row">
+            <label>텍스트 크기</label>
+            <input type="range" id="text-size" min="5" max="20" value="10" oninput="renderWaferMap()">
           </div>
           <div class="control-row">
             <label>Max Value</label>
@@ -204,8 +208,11 @@
         </div>
       </div>
 
-      <!-- [탭 2] Data Table -->
-      <div id="tab-table" class="tab-content" style="display: none;">
+      <!-- [탭 2] Data Table (flex-direction 적용) -->
+      <div id="tab-table" class="tab-content" style="display: none; flex-direction: column;">
+        <div class="table-top-bar">
+          <span class="unit-label">단위: 각도 (°)</span>
+        </div>
         <div class="table-container" id="table-container">
           <!-- 스크립트에서 동적 생성 -->
         </div>
@@ -225,7 +232,7 @@
       document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       
-      document.getElementById(tabId).style.display = (tabId === 'tab-map') ? 'flex' : 'block';
+      document.getElementById(tabId).style.display = (tabId === 'tab-map') ? 'flex' : 'flex';
       btnEl.classList.add('active');
     }
 
@@ -288,7 +295,7 @@
       resetMinMax(); 
     }
 
-    // 통계 연산 헬퍼 함수
+    // 통계 연산 헬퍼 (소수점 1자리 통일)
     function calcStats(validArray) {
       if (validArray.length === 0) return { ave: "-", sd: "-", rsd: "-" };
       const sum = validArray.reduce((a, b) => a + b, 0);
@@ -299,7 +306,7 @@
         sd = Math.sqrt(variance);
       }
       const rsd = ave !== 0 ? (sd / ave) * 100 : 0;
-      return { ave: ave.toFixed(2), sd: sd.toFixed(2), rsd: rsd.toFixed(2) };
+      return { ave: ave.toFixed(1), sd: sd.toFixed(1), rsd: rsd.toFixed(1) };
     }
 
     // 통계 및 자동 범위 리셋
@@ -314,8 +321,8 @@
         currentAutoMax = 100; currentAutoMin = 0;
       }
       
-      document.getElementById("manual-max").value = currentAutoMax.toFixed(2);
-      document.getElementById("manual-min").value = currentAutoMin.toFixed(2);
+      document.getElementById("manual-max").value = currentAutoMax.toFixed(1);
+      document.getElementById("manual-min").value = currentAutoMin.toFixed(1);
       
       renderWaferMap();
     }
@@ -330,7 +337,6 @@
       return `hsl(210, 80%, ${lightness}%)`;
     }
 
-    // 측정 위치 참고도 (가시성 대폭 상향)
     function renderReferenceMap() {
       const group = document.getElementById("ref-points-group");
       group.innerHTML = "";
@@ -341,7 +347,7 @@
         const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
         circle.setAttribute("cx", pt.x);
         circle.setAttribute("cy", svgY);
-        circle.setAttribute("r", 12); // 원 크기 증가
+        circle.setAttribute("r", 12);
         circle.setAttribute("class", "ref-point");
         
         const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
@@ -361,6 +367,7 @@
     function renderWaferMap() {
       const sampleIdx = parseInt(document.getElementById("sample-select").value);
       const pointSize = document.getElementById("point-size").value;
+      const textSize = document.getElementById("text-size").value;
       
       document.getElementById("map-sample-title").innerText = sampleNames[sampleIdx];
 
@@ -396,16 +403,16 @@
         circle.setAttribute("fill", color);
         circle.setAttribute("class", "data-point");
 
-        // 텍스트(실제 값)
+        // 텍스트(실제 값) - 동적으로 글자 크기와 높이 위치 조절
         const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
         text.setAttribute("x", pt.x);
-        // 원의 크기를 고려해 텍스트를 약간 위쪽에 배치 (겹치지 않게)
-        text.setAttribute("y", svgY - parseInt(pointSize) - 4); 
+        text.setAttribute("y", svgY - parseInt(pointSize) - (parseInt(textSize) / 2) + 2); 
         text.setAttribute("class", "point-val-text");
-        text.textContent = val.toFixed(1);
+        text.setAttribute("style", `font-size: ${textSize}px;`);
+        text.textContent = val.toFixed(1); // 1자리 고정
 
         circle.addEventListener("mouseover", (e) => {
-          tooltip.innerHTML = `No.${idx + 1} | X:${pt.x}, Y:${pt.y}<br>Value: <span style="color:#60a5fa">${val.toFixed(2)}</span>`;
+          tooltip.innerHTML = `No.${idx + 1} | X:${pt.x}, Y:${pt.y}<br>Value: <span style="color:#60a5fa">${val.toFixed(1)}</span>`;
           tooltip.style.opacity = 1;
         });
         circle.addEventListener("mousemove", (e) => {
@@ -421,12 +428,12 @@
       });
     }
 
-    // 데이터 테이블 렌더링
+    // 데이터 테이블 렌더링 (모두 가운데 정렬, 소수점 1자리)
     function renderDataTable() {
       const container = document.getElementById("table-container");
       
       let html = `<table class="data-table"><thead><tr>`;
-      html += `<th class="left-align">Point No.</th><th class="left-align">X 좌표</th><th class="left-align">Y 좌표</th>`;
+      html += `<th>Point No.</th><th>X 좌표</th><th>Y 좌표</th>`;
       
       sampleNames.forEach(name => {
         html += `<th>${name}</th>`;
@@ -435,18 +442,18 @@
       
       // 행 데이터 생성
       parsedData.forEach((pt, idx) => {
-        html += `<tr><td class="left-align"><b>${idx + 1}</b></td><td class="left-align">${pt.x}</td><td class="left-align">${pt.y}</td>`;
+        html += `<tr><td><b>${idx + 1}</b></td><td>${pt.x}</td><td>${pt.y}</td>`;
         pt.values.forEach(val => {
-          html += `<td>${val !== null && val !== undefined ? val.toFixed(2) : '-'}</td>`;
+          html += `<td>${val !== null && val !== undefined ? val.toFixed(1) : '-'}</td>`;
         });
         html += `</tr>`;
       });
       html += `</tbody><tfoot>`;
 
       // 통계 푸터 생성
-      let aveRow = `<tr class="stat-row-ave"><th colspan="3" class="left-align">Average (AVE)</th>`;
-      let sdRow = `<tr class="stat-row-sd"><th colspan="3" class="left-align">Standard Deviation (SD)</th>`;
-      let rsdRow = `<tr class="stat-row-rsd"><th colspan="3" class="left-align">% RSD</th>`;
+      let aveRow = `<tr class="stat-row-ave"><th colspan="3">Average (AVE)</th>`;
+      let sdRow = `<tr class="stat-row-sd"><th colspan="3">Standard Deviation (SD)</th>`;
+      let rsdRow = `<tr class="stat-row-rsd"><th colspan="3">% RSD</th>`;
 
       sampleNames.forEach((_, sIdx) => {
         const validValues = parsedData.map(pt => pt.values[sIdx]).filter(v => v !== null && v !== undefined);
